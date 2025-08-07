@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ColossalFramework;
 
 namespace RoadsideCare.Managers
 {
@@ -52,6 +53,9 @@ namespace RoadsideCare.Managers
             // car issues
             public bool IsBroken;
             public bool IsOutOfFuel;
+
+            // cleanup frame
+            public uint FrameIndex;
         }
 
         public static void Init()
@@ -116,12 +120,49 @@ namespace RoadsideCare.Managers
                 DirtPercentage = dirtPercentage,
                 WearPercentage = wearPercenatge,
                 IsBroken = isBroken,
-                IsOutOfFuel = isOutOfFuel
+                IsOutOfFuel = isOutOfFuel,
+                FrameIndex = SimulationManager.instance.m_currentFrameIndex
             };
 
             ParkedVehiclesNeeds.Add(parkedVehicleId, parkedVehicleNeedsStruct);
 
             return parkedVehicleNeedsStruct;
+        }
+
+        public static void CleanupStaleParkedVehicleNeeds()
+        {
+            var staleKeys = new List<ushort>();
+            var currentTime = SimulationManager.instance.m_currentFrameIndex;
+            var staleThreshold = 300; // E.g., 300 frames, roughly 5 seconds
+
+            foreach (var entry in ParkedVehiclesNeeds)
+            {
+                var citizenId = entry.Value.OwnerId;
+
+                var NoParkedVehicle = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId].m_parkedVehicle == 0;
+
+                if(NoParkedVehicle)
+                {
+                    // Check if the entry is too old based on frame index
+                    if (currentTime - entry.Value.FrameIndex > staleThreshold)
+                    {
+                        staleKeys.Add(entry.Key);
+                        continue; // Move to the next entry
+                    }
+
+                    // Check if the citizen still exists
+                    if (CitizenManager.instance.m_citizens.m_buffer[entry.Key].m_instance == 0)
+                    {
+                        staleKeys.Add(entry.Key);
+                    }
+                }      
+            }
+
+            // Remove the stale entries
+            foreach (var key in staleKeys)
+            {
+                RemoveParkedVehicleNeeds(key);
+            }
         }
 
         public static void RemoveVehicleNeeds(ushort vehicleId)

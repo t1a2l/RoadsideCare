@@ -15,15 +15,5 @@ namespace RoadsideCare.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(VehicleManager), "ReleaseParkedVehicle")]
-        [HarmonyPrefix]
-        public static void ReleaseParkedVehicle(ushort parked)
-        {
-            if (VehicleNeedsManager.ParkedVehicleNeedsExist(parked))
-            {
-                VehicleNeedsManager.RemoveParkedVehicleNeeds(parked);
-            }
-        }
-
     }
 }
