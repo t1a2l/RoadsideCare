@@ -98,9 +98,13 @@ namespace RoadsideCare.Serializer
         if (Data != null && Data.Length > iIndex)
         {
             int iVehicleNeedsManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
+
             Debug.Log("RoadsideCare VehiclesNeeds - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleNeedsManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+            
             VehicleNeedsManager.Init();
+
             int VehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
+
             for (int i = 0; i < VehiclesFuel_Count; i++)
             {
                 CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
@@ -149,6 +153,7 @@ namespace RoadsideCare.Serializer
             }
 
             int ParkedVehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
+
             for (int i = 0; i < ParkedVehiclesFuel_Count; i++)
             {
                 CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
