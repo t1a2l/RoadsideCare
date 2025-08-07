@@ -46,7 +46,7 @@ namespace RoadsideCare.HarmonyPatches
             if (citizen.m_parkedVehicle != 0 && VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                VehicleNeedsManager.CreateParkedVehicleNeeds(citizen.m_parkedVehicle, vehicleNeeds.FuelAmount, vehicleNeeds.FuelCapacity, vehicleNeeds.DirtPercentage, 
+                VehicleNeedsManager.CreateParkedVehicleNeeds(citizen.m_parkedVehicle, citizenId, vehicleNeeds.FuelAmount, vehicleNeeds.FuelCapacity, vehicleNeeds.DirtPercentage, 
                     vehicleNeeds.WearPercentage, vehicleNeeds.IsBroken, vehicleNeeds.IsOutOfFuel);
                 VehicleNeedsManager.RemoveVehicleNeeds(vehicleID);
             }

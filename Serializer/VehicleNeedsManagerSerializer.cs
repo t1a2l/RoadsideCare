@@ -37,6 +37,9 @@ namespace RoadsideCare.Serializer
                 // Original target building related
                 StorageData.WriteUInt16(kvp.Value.OriginalTargetBuilding, Data);
 
+                // Owner related
+                StorageData.WriteUInt32(kvp.Value.OwnerId, Data);
+
                 // Fuel related
                 StorageData.WriteFloat(kvp.Value.FuelAmount, Data);
                 StorageData.WriteFloat(kvp.Value.FuelCapacity, Data);
@@ -107,6 +110,9 @@ namespace RoadsideCare.Serializer
                 // Original target building related
                 ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
+                // Owner related
+                uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
+
                 // Fuel related
                 float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
 
@@ -135,7 +141,7 @@ namespace RoadsideCare.Serializer
 
                 bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
 
-                VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, fuelAmount, fuelCapacity, dirtPercentage, 
+                VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage, 
                     wearPercentage, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, isGoingToGetRepaired, isBeingRepaired,
                     isBroken, isOutOfFuel);
                 
@@ -148,6 +154,9 @@ namespace RoadsideCare.Serializer
                 CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
 
                 ushort parkedVehicleId = StorageData.ReadUInt16(Data, ref iIndex);
+
+                // Owner related
+                uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
 
                 // Fuel related
                 float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
@@ -165,7 +174,7 @@ namespace RoadsideCare.Serializer
 
                 bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
 
-                VehicleNeedsManager.CreateParkedVehicleNeeds(parkedVehicleId, fuelAmount, fuelCapacity, dirtPercentage, wearPercentage, isBroken, isOutOfFuel);
+                VehicleNeedsManager.CreateParkedVehicleNeeds(parkedVehicleId, ownerId, fuelAmount, fuelCapacity, dirtPercentage, wearPercentage, isBroken, isOutOfFuel);
                     
                 CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
             }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace RoadsideCare.Managers
 {
@@ -11,6 +12,7 @@ namespace RoadsideCare.Managers
         public struct VehicleNeedsStruct
         {
             public ushort OriginalTargetBuilding;
+            public uint OwnerId;
 
             // fuel related
             public float FuelAmount;
@@ -35,6 +37,8 @@ namespace RoadsideCare.Managers
 
         public struct ParkedVehicleNeedsStruct
         {
+            public uint OwnerId;
+
             // fuel related
             public float FuelAmount;
             public float FuelCapacity;
@@ -74,21 +78,22 @@ namespace RoadsideCare.Managers
 
         public static bool ParkedVehicleNeedsExist(ushort parkedVehicleId) => ParkedVehiclesNeeds.ContainsKey(parkedVehicleId);
 
-        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, float fuelAmount, float fuelCapacity, 
-            float currentDirtPercentage, float currentWearPercenatge, bool isRefueling = false, bool isGoingToRefuel = false, bool isBeingWashed = false, 
+        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float fuelAmount, float fuelCapacity, 
+            float dirtPercentage, float wearPercenatge, bool isRefueling = false, bool isGoingToRefuel = false, bool isBeingWashed = false, 
             bool isGoingToGetWashed = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
         {
             var vehicleNeedsStruct = new VehicleNeedsStruct
             {
+                OriginalTargetBuilding = originalTargetBuilding,
+                OwnerId = ownerId,
                 FuelAmount = fuelAmount,
                 FuelCapacity = fuelCapacity,
-                OriginalTargetBuilding = originalTargetBuilding,
                 IsRefueling = isRefueling,
                 IsGoingToRefuel = isGoingToRefuel,
-                DirtPercentage = currentDirtPercentage,
+                DirtPercentage = dirtPercentage,
                 IsBeingWashed = isBeingWashed,
                 IsGoingToGetWashed = isGoingToGetWashed,
-                WearPercentage = currentWearPercenatge,
+                WearPercentage = wearPercenatge,
                 IsBeingRepaired = isBeingRepaired,
                 IsGoingToGetRepaired = isGoingToGetRepaired,
                 IsBroken = isBroken,
@@ -100,15 +105,16 @@ namespace RoadsideCare.Managers
             return vehicleNeedsStruct;
         }
 
-        public static ParkedVehicleNeedsStruct CreateParkedVehicleNeeds(ushort parkedVehicleId, float fuelAmount, float fuelCapacity, 
-            float currentDirtPercentage, float currentWearPercenatge, bool isBroken = false, bool isOutOfFuel = false)
+        public static ParkedVehicleNeedsStruct CreateParkedVehicleNeeds(ushort parkedVehicleId, uint ownerId, float fuelAmount, float fuelCapacity, 
+            float dirtPercentage, float wearPercenatge, bool isBroken = false, bool isOutOfFuel = false)
         {
             var parkedVehicleNeedsStruct = new ParkedVehicleNeedsStruct
             {
+                OwnerId = ownerId,
                 FuelAmount = fuelAmount,
                 FuelCapacity = fuelCapacity,
-                DirtPercentage = currentDirtPercentage,
-                WearPercentage = currentWearPercenatge,
+                DirtPercentage = dirtPercentage,
+                WearPercentage = wearPercenatge,
                 IsBroken = isBroken,
                 IsOutOfFuel = isOutOfFuel
             };
@@ -131,6 +137,24 @@ namespace RoadsideCare.Managers
             if (ParkedVehiclesNeeds.TryGetValue(parkedVehicleId, out var _))
             {
                 ParkedVehiclesNeeds.Remove(parkedVehicleId);
+            }
+        }
+
+        public static KeyValuePair<ushort, VehicleNeedsStruct> FindVehicleWithNoOwner(ushort vehicleId)
+        {
+            return VehiclesNeeds.FirstOrDefault(item => item.Key == vehicleId && item.Value.OwnerId == 0);
+        }
+
+        public static KeyValuePair<ushort, ParkedVehicleNeedsStruct> FindParkedVehicleOwner(uint ownerId)
+        {
+            return ParkedVehiclesNeeds.FirstOrDefault(item => item.Value.OwnerId == ownerId);
+        }
+
+        public static void SetNewVehicleNeeds(ushort vehicleId, VehicleNeedsStruct vehicleNeeds)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var _))
+            {
+                VehiclesNeeds[vehicleId] = vehicleNeeds;
             }
         }
 
