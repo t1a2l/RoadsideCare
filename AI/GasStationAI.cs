@@ -600,6 +600,22 @@ namespace RoadsideCare.AI
             noise = m_noiseAccumulation;
         }
 
+        private void GetAccumulation(Randomizer r, int productionRate, int taxRate, DistrictPolicies.CityPlanning cityPlanningPolicies, DistrictPolicies.Taxation taxationPolicies, out int entertainment, out int attractiveness)
+        {
+            entertainment = 1;
+            attractiveness = 1;
+            if (entertainment != 0)
+            {
+                entertainment = (productionRate * entertainment + r.Int32(100u)) / 100;
+            }
+            if (attractiveness != 0)
+            {
+                attractiveness = (productionRate * attractiveness + r.Int32(100u)) / 100;
+            }
+            attractiveness = UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Tourism, attractiveness);
+            entertainment = UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Tourism, entertainment);
+        }
+
         public override bool RequireRoadAccess()
         {
             return true;
