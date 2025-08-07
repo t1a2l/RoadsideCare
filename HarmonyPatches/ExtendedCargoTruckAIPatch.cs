@@ -174,8 +174,8 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 if(material == ExtendedTransferManager.TransferReason.VehicleFuel || material == ExtendedTransferManager.TransferReason.VehicleFuelElectric ||
-                    material == ExtendedTransferManager.TransferReason.VehicleWash || material == ExtendedTransferManager.TransferReason.VehicleMinorRepair || 
-                    material == ExtendedTransferManager.TransferReason.VehicleMajorRepair)
+                    material == ExtendedTransferManager.TransferReason.VehicleLargeWash || material == ExtendedTransferManager.TransferReason.VehicleLargeMinorRepair || 
+                    material == ExtendedTransferManager.TransferReason.VehicleLargeMajorRepair)
                 {
                     __instance.SetTarget(vehicleID, ref data, offer.Building);
                     return false;
