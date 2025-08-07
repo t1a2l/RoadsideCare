@@ -10,7 +10,7 @@ namespace RoadsideCare
     public class Mod : LoadingExtensionBase, IUserMod
     {
         string IUserMod.Name => "Roadside Care";
-        string IUserMod.Description => "Track individual vehicles' needs and strategically place gas stations, car washes, and mechanic shops.";
+        string IUserMod.Description => "Track individual vehicles' needs and strategically place gas stations, car washes, and repair shops as roadside care for vehicles.";
 
         public void OnEnabled()
         {
