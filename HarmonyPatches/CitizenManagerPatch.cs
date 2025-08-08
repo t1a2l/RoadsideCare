@@ -4,7 +4,7 @@ using RoadsideCare.Managers;
 namespace RoadsideCare.HarmonyPatches
 {
     [HarmonyPatch]
-    internal class CitizenManagerPatch
+    public static class CitizenManagerPatch
     {
         [HarmonyPatch(typeof(CitizenManager), "ReleaseCitizenImplementation")]
         [HarmonyPrefix]
