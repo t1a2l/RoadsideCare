@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
@@ -19,11 +20,15 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Noise Radius", "Pollution")]
         public float m_noiseRadius = 50f;
 
+        public ushort m_fuelAmount = 0;
+
         [CustomizableProperty("Fuel Capacity")]
-        public int m_maxFuelCapacity = 50000;
+        public int m_fuelCapacity = 50000;
 
         [CustomizableProperty("Battery Recharge")]
         public bool m_allowBatteryRecharge = true;
+
+        public List<ushort> m_fuelLanes = [];
 
         readonly ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.PetroleumProducts;
 
@@ -189,21 +194,21 @@ namespace RoadsideCare.AI
 
         public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
         {
-            amount = data.m_customBuffer1;
-            max = m_maxFuelCapacity;
+            amount = m_fuelAmount;
+            max = m_fuelCapacity;
         }
 
         public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
         {
             if (material == m_incomingResource)
             {
-                amountDelta = Mathf.Clamp(amountDelta, 0, m_maxFuelCapacity - data.m_customBuffer1);
-                data.m_customBuffer1 += (ushort)amountDelta;
+                amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelCapacity - m_fuelAmount);
+                m_fuelAmount += (ushort)amountDelta;
             }
             if (material == m_outgoingResource1)
             {
-                amountDelta = Mathf.Clamp(amountDelta, 0, data.m_customBuffer1);
-                data.m_customBuffer1 -= (ushort)amountDelta;
+                amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelAmount);
+                m_fuelAmount -= (ushort)amountDelta;
             }
         }
 
@@ -253,10 +258,10 @@ namespace RoadsideCare.AI
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
                 }
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-                int missingFuel = m_maxFuelCapacity - buildingData.m_customBuffer1;
+                int missingFuel = m_fuelCapacity - m_fuelAmount;
                 if (buildingData.m_fireIntensity == 0)
                 {
-                    if (missingFuel > m_maxFuelCapacity * 0.8)
+                    if (missingFuel > m_fuelCapacity * 0.8)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
@@ -266,7 +271,7 @@ namespace RoadsideCare.AI
                         Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource, offer);
                     }
 
-                    if (buildingData.m_customBuffer1 > m_maxFuelCapacity * 0.1)
+                    if (m_fuelAmount > m_fuelCapacity * 0.1)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
@@ -286,6 +291,7 @@ namespace RoadsideCare.AI
                     offer.Active = false;
                     Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer);
                 }
+                RefreshFuelLanes();
             }
         }
 
@@ -299,7 +305,7 @@ namespace RoadsideCare.AI
         public override string GetLocalizedStats(ushort buildingID, ref Building data)
         {
             StringBuilder stringBuilder = new();
-            stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", data.m_customBuffer1, m_maxFuelCapacity));
+            stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", m_fuelAmount, m_fuelCapacity));
             stringBuilder.Append(Environment.NewLine);
             return stringBuilder.ToString();
         }
@@ -327,6 +333,31 @@ namespace RoadsideCare.AI
         {
             position = data.CalculateSidewalkPosition(0f, 2f);
             target = position;
+        }
+
+        public void RefreshFuelLanes()
+        {
+            var toRemove = new List<ushort>();
+            foreach (var segmentId in m_fuelLanes)
+            {
+                if (segmentId == 0 || !NetManager.instance.m_segments.m_buffer[segmentId].m_flags.IsFlagSet(NetSegment.Flags.Created))
+                {
+                    toRemove.Add(segmentId);
+                    continue;
+                }
+
+                ushort infoIndex = NetManager.instance.m_segments.m_buffer[segmentId].m_infoIndex;
+                NetInfo info = PrefabCollection<NetInfo>.GetPrefab(infoIndex);
+                if (info.m_netAI is not FuelLaneAI)
+                {
+                    toRemove.Add(segmentId);
+                }
+            }
+
+            foreach (var seg in toRemove)
+            {
+                m_fuelLanes.Remove(seg);
+            }
         }
 
     }
