@@ -24,6 +24,13 @@ namespace RoadsideCare.HarmonyPatches
             UpdateStationsNearSegment(segment, false);
         }
 
+        [HarmonyPatch(typeof(NetManager), "UpdateSegment", [typeof(ushort)],[ArgumentType.Normal])]
+        [HarmonyPostfix]
+        public static void UpdateSegment(ushort segment)
+        {
+            UpdateStationsNearSegment(segment, true);
+        }
+
         private static void UpdateStationsNearSegment(ushort segmentID, bool isNew)
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
@@ -41,7 +48,9 @@ namespace RoadsideCare.HarmonyPatches
                     if (isNew)
                     {
                         if (!gasPumpAI.m_fuelLanes.Contains(segmentID))
+                        {
                             gasPumpAI.m_fuelLanes.Add(segmentID);
+                        }    
                     }
                     else
                     {
