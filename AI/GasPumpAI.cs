@@ -20,7 +20,7 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Noise Radius", "Pollution")]
         public float m_noiseRadius = 50f;
 
-        public ushort m_fuelAmount = 0;
+        public ushort m_fuelAmount;
 
         [CustomizableProperty("Fuel Capacity")]
         public int m_fuelCapacity = 50000;

@@ -25,10 +25,10 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Visit place count", "Visitors", 3)]
         public int m_visitPlaceCount = 10;
 
-        public ushort m_currentFuelAmount = 0;
+        public ushort m_fuelAmount;
 
         [CustomizableProperty("Fuel Capacity")]
-        public ushort m_maxFuelCapacity = 50000;
+        public ushort m_fuelCapacity = 50000;
 
         [CustomizableProperty("Battery Recharge")]
         public bool m_allowBatteryRecharge = true;
@@ -422,21 +422,21 @@ namespace RoadsideCare.AI
 
         public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
         {
-            amount = m_currentFuelAmount;
-            max = m_maxFuelCapacity;
+            amount = m_fuelAmount;
+            max = m_fuelCapacity;
         }
 
         public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
         {
             if (material == m_incomingResource2)
             {
-                amountDelta = Mathf.Clamp(amountDelta, 0, m_maxFuelCapacity - m_currentFuelAmount);
-                m_currentFuelAmount += (ushort)amountDelta;
+                amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelCapacity - m_fuelAmount);
+                m_fuelAmount += (ushort)amountDelta;
             }
             if (material == m_outgoingResource1)
             {
-                amountDelta = Mathf.Clamp(amountDelta, 0, m_currentFuelAmount);
-                m_currentFuelAmount -= (ushort)amountDelta;
+                amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelAmount);
+                m_fuelAmount -= (ushort)amountDelta;
             }
         }
 
@@ -516,10 +516,10 @@ namespace RoadsideCare.AI
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
                 }
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-                int missingFuel = m_maxFuelCapacity - m_currentFuelAmount;
+                int missingFuel = m_fuelCapacity - m_fuelAmount;
                 if (buildingData.m_fireIntensity == 0)
                 {
-                    if (missingFuel > m_maxFuelCapacity * 0.8)
+                    if (missingFuel > m_fuelCapacity * 0.8)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
@@ -529,7 +529,7 @@ namespace RoadsideCare.AI
                         Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource2, offer);
                     }
 
-                    if (buildingData.m_customBuffer1 > m_maxFuelCapacity * 0.1)
+                    if (buildingData.m_customBuffer1 > m_fuelCapacity * 0.1)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
@@ -589,7 +589,7 @@ namespace RoadsideCare.AI
         public override string GetLocalizedStats(ushort buildingID, ref Building data)
         {
             StringBuilder stringBuilder = new();
-            stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", m_currentFuelAmount, m_maxFuelCapacity));
+            stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", m_fuelAmount, m_fuelCapacity));
             stringBuilder.Append(Environment.NewLine);
             return stringBuilder.ToString();
         }
