@@ -9,7 +9,7 @@ namespace RoadsideCare.HarmonyPatches
     public static class NetManagerPatch
     {
         [HarmonyPatch(typeof(NetManager), "CreateSegment",
-           [typeof(ushort), typeof(Randomizer), typeof(NetInfo), typeof(ushort), typeof(ushort), typeof(Vector3), typeof(Vector3), typeof(uint), typeof(uint), typeof(uint)],
+           [typeof(ushort), typeof(Randomizer), typeof(NetInfo), typeof(ushort), typeof(ushort), typeof(Vector3), typeof(Vector3), typeof(uint), typeof(uint), typeof(bool)],
            [ArgumentType.Out, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPostfix]
         public static void CreateSegment(ref ushort segment, ref Randomizer randomizer, NetInfo info, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, uint buildIndex, uint modifiedIndex, bool invert)
