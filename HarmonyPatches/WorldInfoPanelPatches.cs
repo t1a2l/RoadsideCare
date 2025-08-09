@@ -35,8 +35,8 @@ namespace RoadsideCare.HarmonyPatches
                 vehicleInfo = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[___m_InstanceID.Vehicle].Info;
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleId);
                 fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
-                dirtValue = vehicleNeeds.DirtPercentage;
-                wearValue = vehicleNeeds.WearPercentage;
+                dirtValue = vehicleNeeds.DirtPercentage / 100;
+                wearValue = vehicleNeeds.WearPercentage / 100;
                 isBroken = vehicleNeeds.IsBroken;
                 isOutOfFuel = vehicleNeeds.IsOutOfFuel;
             }
@@ -46,8 +46,8 @@ namespace RoadsideCare.HarmonyPatches
                 vehicleInfo = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
                 var vehicleNeeds = VehicleNeedsManager.GetParkedVehicleNeeds(vehicleId);
                 fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
-                dirtValue = vehicleNeeds.DirtPercentage;
-                wearValue = vehicleNeeds.WearPercentage;
+                dirtValue = vehicleNeeds.DirtPercentage / 100;
+                wearValue = vehicleNeeds.WearPercentage / 100;
                 isBroken = vehicleNeeds.IsBroken;
                 isOutOfFuel = vehicleNeeds.IsOutOfFuel;
             }
@@ -65,8 +65,9 @@ namespace RoadsideCare.HarmonyPatches
                 {
                     Type.text += "Fuel Percent:  " + fuelValue.ToString("#0%");
                 }
-
+                Type.text += Environment.NewLine;
                 Type.text += " Dirt Percent:  " + dirtValue.ToString("#0%");
+                Type.text += Environment.NewLine;
                 Type.text += " Wear Percent:  " + wearValue.ToString("#0%");
 
                 if(isBroken)
@@ -100,12 +101,31 @@ namespace RoadsideCare.HarmonyPatches
                 Type.parent.height = 35;
                 Type.text += Environment.NewLine;
                 float fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
+                float dirtValue = vehicleNeeds.DirtPercentage / 100;
+                float wearValue = vehicleNeeds.WearPercentage / 100;
+                bool isBroken = vehicleNeeds.IsBroken;
+                bool isOutOfFuel = vehicleNeeds.IsOutOfFuel;
+
                 Type.text += "Fuel Percent:  " + fuelValue.ToString("#0%");
-                var panel = __instance.Find<UIPanel>("(Library) CityServiceVehicleWorldInfoPanel");
-                if (panel != null)
+                Type.text += Environment.NewLine;
+                Type.text += " Dirt Percent:  " + dirtValue.ToString("#0%");
+                Type.text += Environment.NewLine;
+                Type.text += " Wear Percent:  " + wearValue.ToString("#0%");
+
+                if (isBroken)
                 {
-                    panel.height = 190;
+                    Type.text += Environment.NewLine;
+                    Type.text += " Broke Down  ";
                 }
+
+                if (isOutOfFuel)
+                {
+                    Type.text += Environment.NewLine;
+                    Type.text += " Out Of Fuel  ";
+                }
+
+                var panel = __instance.Find<UIPanel>("(Library) CityServiceVehicleWorldInfoPanel");
+                panel?.height = 190;
             }
         }
     }
