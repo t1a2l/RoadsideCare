@@ -28,7 +28,7 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Battery Recharge")]
         public bool m_allowBatteryRecharge = true;
 
-        public List<ushort> m_fuelLanes = [];
+        public List<ushort> m_fuelLanes;
 
         readonly ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.PetroleumProducts;
 
@@ -337,6 +337,7 @@ namespace RoadsideCare.AI
 
         public void RefreshFuelLanes()
         {
+            m_fuelLanes ??= [];
             var toRemove = new List<ushort>();
             foreach (var segmentId in m_fuelLanes)
             {
