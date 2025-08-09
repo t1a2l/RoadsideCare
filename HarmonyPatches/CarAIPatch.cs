@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace RoadsideCare.HarmonyPatches
 {
+    [HarmonyPatch]
     public static class CarAIPatch
     {
         [HarmonyPatch(typeof(CarAI), "PathfindFailure")]
