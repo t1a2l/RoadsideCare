@@ -2,6 +2,7 @@
 using ColossalFramework;
 using ColossalFramework.Math;
 using HarmonyLib;
+using RoadsideCare.Managers;
 using UnityEngine;
 
 namespace RoadsideCare.AI
@@ -63,11 +64,20 @@ namespace RoadsideCare.AI
             if ((building.m_flags & Building.Flags.Created) == 0) return false;
 
             var ai = building.Info.m_buildingAI as GasPumpAI;
-            if (ai == null || ai.m_fuelLanes == null || ai.m_fuelLanes.Count == 0)
+            if (ai == null || !GasStationManager.GasStationBuildingExist(buildingID))
+            {
                 return false;
+            }
+
+            var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+
+            if (gasStation.FuelLanes == null || gasStation.FuelLanes.Count == 0)
+            {
+                return false;
+            }
 
             // Pick a random segment from the fuel lanes
-            ushort segmentId = ai.m_fuelLanes[Random.Range(0, ai.m_fuelLanes.Count)];
+            ushort segmentId = gasStation.FuelLanes[Random.Range(0, gasStation.FuelLanes.Count)];
             var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
 
             if (laneId == 0) return false;
