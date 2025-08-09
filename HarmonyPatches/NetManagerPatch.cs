@@ -1,6 +1,7 @@
 ﻿using ColossalFramework.Math;
 using HarmonyLib;
 using RoadsideCare.AI;
+using RoadsideCare.Managers;
 using UnityEngine;
 
 namespace RoadsideCare.HarmonyPatches
@@ -43,19 +44,21 @@ namespace RoadsideCare.HarmonyPatches
                 if ((b.m_flags & Building.Flags.Created) == 0)
                     continue;
 
-                if (b.Info.m_buildingAI is GasPumpAI gasPumpAI && Vector3.Distance(segPos, b.m_position) <= 30f && segment.Info.m_netAI is FuelLaneAI)
+                if (b.Info.m_buildingAI is GasPumpAI && Vector3.Distance(segPos, b.m_position) <= 30f && segment.Info.m_netAI is FuelLaneAI && GasStationManager.GasStationBuildingExist(buildingID))
                 {
+                    var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                     if (isNew)
                     {
-                        if (!gasPumpAI.m_fuelLanes.Contains(segmentID))
+                        if (!gasStation.FuelLanes.Contains(segmentID))
                         {
-                            gasPumpAI.m_fuelLanes.Add(segmentID);
+                            gasStation.FuelLanes.Add(segmentID);
                         }    
                     }
                     else
                     {
-                        gasPumpAI.m_fuelLanes.Remove(segmentID);
+                        gasStation.FuelLanes.Remove(segmentID);
                     }
+                    GasStationManager.SetFuelLanes(buildingID, gasStation.FuelLanes);
                 }
             }
         }
