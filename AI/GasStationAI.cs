@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
@@ -29,6 +28,9 @@ namespace RoadsideCare.AI
 
         [CustomizableProperty("Fuel Capacity")]
         public int m_fuelCapacity = 50000;
+
+        [CustomizableProperty("Goods Capacity")]
+        public int m_goodsCapacity = 20000;
 
         [CustomizableProperty("Battery Recharge")]
         public bool m_allowBatteryRecharge = true;
@@ -516,53 +518,164 @@ namespace RoadsideCare.AI
             workPlaceCount += m_workPlaceCount0 + m_workPlaceCount1;
             GetWorkBehaviour(buildingID, ref buildingData, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount);
             HandleWorkPlaces(buildingID, ref buildingData, m_workPlaceCount0, m_workPlaceCount1, 0, 0, ref behaviour, aliveWorkerCount, totalWorkerCount);
+            visitPlaceCount += m_visitPlaceCount;
+            GetVisitBehaviour(buildingID, ref buildingData, ref behaviour, ref aliveVisitorCount, ref totalVisitorCount);
         }
 
         protected override void ProduceGoods(ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
         {
             base.ProduceGoods(buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
-            if (finalProductionRate != 0 && GasStationManager.GasStationBuildingExist(buildingID))
+            Notification.ProblemStruct problemStruct = Notification.RemoveProblems(buildingData.m_problems, Notification.Problem1.NoCustomers | Notification.Problem1.NoGoods);
+            if (finalProductionRate != 0)
             {
+                DistrictManager instance = Singleton<DistrictManager>.instance;
+                byte park = instance.GetPark(buildingData.m_position);
                 if (m_noiseAccumulation != 0)
                 {
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
                 }
-                HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
-                int missingFuel = m_fuelCapacity - gasStation.FuelAmount;
-                if (buildingData.m_fireIntensity == 0)
+                HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount + totalVisitorCount);
+                int goodsCapacity = m_goodsCapacity;
+                TransferManager.TransferReason outgoingTransferReason = GetOutgoingTransferReason(buildingID);
+                if (productionRate != 0)
                 {
-                    if (missingFuel > m_fuelCapacity * 0.8)
+                    int num16 = goodsCapacity;
+                    if (m_incomingResource1 != TransferManager.TransferReason.None)
                     {
-                        ExtendedTransferManager.Offer offer = default;
-                        offer.Building = buildingID;
-                        offer.Position = buildingData.m_position;
-                        offer.Amount = missingFuel;
-                        offer.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource2, offer);
+                        num16 = Mathf.Min(num16, buildingData.m_customBuffer1);
+                    }
+                    if (outgoingTransferReason != TransferManager.TransferReason.None)
+                    {
+                        num16 = Mathf.Min(num16, goodsCapacity - buildingData.m_customBuffer2);
+                    }
+                    productionRate = Mathf.Max(0, Mathf.Min(productionRate, (num16 * 200 + goodsCapacity - 1) / goodsCapacity));
+                    int num17 = (visitPlaceCount * productionRate + 9) / 10;
+                    if (Singleton<SimulationManager>.instance.m_isNightTime)
+                    {
+                        num17 = num17 + 1 >> 1;
+                    }
+                    num17 = Mathf.Max(0, Mathf.Min(num17, num16));
+                    if (m_incomingResource1 != TransferManager.TransferReason.None)
+                    {
+                        buildingData.m_customBuffer1 -= (ushort)num17;
+                    }
+                    if (outgoingTransferReason != TransferManager.TransferReason.None)
+                    {
+                        buildingData.m_customBuffer2 += (ushort)num17;
+                    }
+                    productionRate = (num17 + 9) / 10;
+                }
+                int count = 0;
+                int cargo = 0;
+                int capacity = 0;
+                int outside = 0;
+                if (m_incomingResource1 != TransferManager.TransferReason.None)
+                {
+                    CalculateGuestVehicles(buildingID, ref buildingData, m_incomingResource1, ref count, ref cargo, ref capacity, ref outside);
+                    buildingData.m_tempImport = (byte)Mathf.Clamp(outside, buildingData.m_tempImport, 255);
+                }
+                buildingData.m_tempExport = (byte)Mathf.Clamp(behaviour.m_touristCount, buildingData.m_tempExport, 255);
+                buildingData.m_adults = (byte)productionRate;
+                int num18 = visitPlaceCount * 500;
+                if (buildingData.m_customBuffer2 > goodsCapacity - (num18 >> 1) && aliveVisitorCount <= visitPlaceCount >> 1)
+                {
+                    buildingData.m_outgoingProblemTimer = (byte)Mathf.Min(255, buildingData.m_outgoingProblemTimer + 1);
+                    if (buildingData.m_outgoingProblemTimer >= 192)
+                    {
+                        problemStruct = Notification.AddProblems(problemStruct, Notification.Problem1.NoCustomers | Notification.Problem1.MajorProblem);
+                    }
+                    else if (buildingData.m_outgoingProblemTimer >= 128)
+                    {
+                        problemStruct = Notification.AddProblems(problemStruct, Notification.Problem1.NoCustomers);
+                    }
+                }
+                else
+                {
+                    buildingData.m_outgoingProblemTimer = 0;
+                }
+                if (buildingData.m_customBuffer1 == 0 && m_incomingResource1 != TransferManager.TransferReason.None)
+                {
+                    buildingData.m_incomingProblemTimer = (byte)Mathf.Min(255, buildingData.m_incomingProblemTimer + 1);
+                    problemStruct = ((buildingData.m_incomingProblemTimer >= 64) ? Notification.AddProblems(problemStruct, Notification.Problem1.MajorProblem | Notification.Problem1.NoGoods) : Notification.AddProblems(problemStruct, Notification.Problem1.NoGoods));
+                }
+                else
+                {
+                    buildingData.m_incomingProblemTimer = 0;
+                }
+                if (buildingData.m_fireIntensity == 0 && m_incomingResource1 != TransferManager.TransferReason.None)
+                {
+                    int num19 = goodsCapacity - buildingData.m_customBuffer1 - capacity;
+                    int num20 = MaxIncomingLoadSize();
+                    num19 -= num20 >> 1;
+                    if (num19 >= 0)
+                    {
+                        TransferManager.TransferOffer offer = new()
+                        {
+                            Priority = num19 * 8 / num20,
+                            Building = buildingID,
+                            Position = buildingData.m_position,
+                            Amount = 1,
+                            Active = false
+                        };
+                        Singleton<TransferManager>.instance.AddIncomingOffer(m_incomingResource1, offer);
+                    }
+                }
+                if (buildingData.m_fireIntensity == 0 && outgoingTransferReason != TransferManager.TransferReason.None)
+                {
+                    int num21 = buildingData.m_customBuffer2 - aliveVisitorCount * 100;
+                    int num22 = Mathf.Max(0, visitPlaceCount - totalVisitorCount);
+                    if (num21 >= 100 && num22 > 0)
+                    {
+                        TransferManager.TransferOffer offer2 = new TransferManager.TransferOffer
+                        {
+                            Priority = Mathf.Max(1, num21 * 8 / goodsCapacity),
+                            Building = buildingID,
+                            Position = buildingData.m_position,
+                            Amount = Mathf.Min(num21 / 100, num22),
+                            Active = false
+                        };
+                        Singleton<TransferManager>.instance.AddOutgoingOffer(outgoingTransferReason, offer2);
+                    }
+                }
+                if (GasStationManager.GasStationBuildingExist(buildingID))
+                {
+                    var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                    int missingFuel = m_fuelCapacity - gasStation.FuelAmount;
+                    if (buildingData.m_fireIntensity == 0)
+                    {
+                        if (missingFuel > m_fuelCapacity * 0.8)
+                        {
+                            ExtendedTransferManager.Offer offer = default;
+                            offer.Building = buildingID;
+                            offer.Position = buildingData.m_position;
+                            offer.Amount = missingFuel;
+                            offer.Active = false;
+                            Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource2, offer);
+                        }
+
+                        if (gasStation.FuelAmount > m_fuelCapacity * 0.1)
+                        {
+                            ExtendedTransferManager.Offer offer = default;
+                            offer.Building = buildingID;
+                            offer.Position = buildingData.m_position;
+                            offer.Amount = 1;
+                            offer.Active = false;
+                            Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource1, offer);
+                        }
                     }
 
-                    if (gasStation.FuelAmount > m_fuelCapacity * 0.1)
+                    if (buildingData.m_electricityBuffer > 0)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
                         offer.Position = buildingData.m_position;
                         offer.Amount = 1;
                         offer.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource1, offer);
+                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer);
                     }
                 }
-
-                if (buildingData.m_electricityBuffer > 0)
-                {
-                    ExtendedTransferManager.Offer offer = default;
-                    offer.Building = buildingID;
-                    offer.Position = buildingData.m_position;
-                    offer.Amount = 1;
-                    offer.Active = false;
-                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer);
-                }
             }
+            buildingData.m_problems = problemStruct; 
         }
 
         private int GetTaxRate(ushort buildingID, ref Building buildingData, DistrictPolicies.Taxation taxationPolicies)
