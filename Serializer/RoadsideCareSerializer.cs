@@ -43,9 +43,19 @@ namespace RoadsideCare.Serializer
                             while (Index < Data.Length)
                             {
                                 // Vehicles Needs settings
-                                CheckStartTuple("VehicleFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
+                                CheckStartTuple("VehicleNeedsManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 VehicleNeedsManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
-                                CheckEndTuple("VehicleFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
+                                CheckEndTuple("VehicleNeedsManagerSerializer", SaveGameFileVersion, Data, ref Index);
+
+                                if (Index == Data.Length)
+                                {
+                                    break;
+                                }
+
+                                // Gas Stations settings
+                                CheckStartTuple("GasStationManagerSerializer", SaveGameFileVersion, Data, ref Index);
+                                GasStationManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
+                                CheckEndTuple("GasStationManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 break;
                             }
                         }
@@ -93,6 +103,11 @@ namespace RoadsideCare.Serializer
                     // Vehicles Needs settings
                     StorageData.WriteUInt32(uiTUPLE_START, Data);
                     VehicleNeedsManagerSerializer.SaveData(Data);
+                    StorageData.WriteUInt32(uiTUPLE_END, Data);
+
+                    // Vehicles Needs settings
+                    StorageData.WriteUInt32(uiTUPLE_START, Data);
+                    GasStationManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
 
                     m_serializableData.SaveData(DataID, Data.ToArray());

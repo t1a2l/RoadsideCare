@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
 using ColossalFramework.Math;
 using MoreTransferReasons;
+using RoadsideCare.Managers;
 using UnityEngine;
 
 namespace RoadsideCare.AI
@@ -25,10 +27,8 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Visit place count", "Visitors", 3)]
         public int m_visitPlaceCount = 10;
 
-        public ushort m_fuelAmount;
-
         [CustomizableProperty("Fuel Capacity")]
-        public ushort m_fuelCapacity = 50000;
+        public int m_fuelCapacity = 50000;
 
         [CustomizableProperty("Battery Recharge")]
         public bool m_allowBatteryRecharge = true;
@@ -246,11 +246,13 @@ namespace RoadsideCare.AI
             int num3 = Mathf.Min(Mathf.Max(m_visitPlaceCount * 500, num * 4), 65535);
             data.m_customBuffer1 = (ushort)Singleton<SimulationManager>.instance.m_randomizer.Int32(num3 - num, num3);
             data.m_cashBuffer = GetCashCapacity(buildingID, ref data) >> 1;
+            GasStationManager.CreateGasStationBuilding(buildingID, 0, []);
         }
 
         public override void ReleaseBuilding(ushort buildingID, ref Building data)
         {
             base.ReleaseBuilding(buildingID, ref data);
+            GasStationManager.RemoveGasStation(buildingID);
         }
 
         public override void BuildingLoaded(ushort buildingID, ref Building data, uint version)
@@ -263,6 +265,10 @@ namespace RoadsideCare.AI
             int num4 = Mathf.Min(Mathf.Max(num2 * 500, num * 4), 65535);
             data.m_customBuffer1 = (ushort)(data.m_customBuffer1 + num4 - num3);
             data.m_cashBuffer = GetCashCapacity(buildingID, ref data) >> 1;
+            if(!GasStationManager.GasStationBuildingExist(buildingID))
+            {
+                GasStationManager.CreateGasStationBuilding(buildingID, 0, []);
+            }
         }
 
         public override void EndRelocating(ushort buildingID, ref Building data)
@@ -422,21 +428,27 @@ namespace RoadsideCare.AI
 
         public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
         {
-            amount = m_fuelAmount;
+            var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+            amount = gasStation.FuelAmount;
             max = m_fuelCapacity;
         }
 
         public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
         {
-            if (material == m_incomingResource2)
+            if(GasStationManager.GasStationBuildingExist(buildingID))
             {
-                amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelCapacity - m_fuelAmount);
-                m_fuelAmount += (ushort)amountDelta;
-            }
-            if (material == m_outgoingResource1)
-            {
-                amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelAmount);
-                m_fuelAmount -= (ushort)amountDelta;
+                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                if (material == m_incomingResource2)
+                {
+                    amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelCapacity - gasStation.FuelAmount);
+                    gasStation.FuelAmount += (ushort)amountDelta;
+                }
+                if (material == m_outgoingResource1)
+                {
+                    amountDelta = Mathf.Clamp(amountDelta, 0, gasStation.FuelAmount);
+                    gasStation.FuelAmount -= (ushort)amountDelta;
+                }
+                GasStationManager.SetFuelAmount(buildingID, gasStation.FuelAmount);
             }
         }
 
@@ -509,14 +521,15 @@ namespace RoadsideCare.AI
         protected override void ProduceGoods(ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
         {
             base.ProduceGoods(buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
-            if (finalProductionRate != 0)
+            if (finalProductionRate != 0 && GasStationManager.GasStationBuildingExist(buildingID))
             {
                 if (m_noiseAccumulation != 0)
                 {
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
                 }
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-                int missingFuel = m_fuelCapacity - m_fuelAmount;
+                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                int missingFuel = m_fuelCapacity - gasStation.FuelAmount;
                 if (buildingData.m_fireIntensity == 0)
                 {
                     if (missingFuel > m_fuelCapacity * 0.8)
@@ -529,7 +542,7 @@ namespace RoadsideCare.AI
                         Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource2, offer);
                     }
 
-                    if (buildingData.m_customBuffer1 > m_fuelCapacity * 0.1)
+                    if (gasStation.FuelAmount > m_fuelCapacity * 0.1)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
@@ -589,8 +602,12 @@ namespace RoadsideCare.AI
         public override string GetLocalizedStats(ushort buildingID, ref Building data)
         {
             StringBuilder stringBuilder = new();
-            stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", m_fuelAmount, m_fuelCapacity));
-            stringBuilder.Append(Environment.NewLine);
+            if (GasStationManager.GasStationBuildingExist(buildingID))
+            {
+                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", gasStation.FuelAmount, m_fuelCapacity));
+                stringBuilder.Append(Environment.NewLine);
+            }
             return stringBuilder.ToString();
         }
 
