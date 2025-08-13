@@ -31,7 +31,7 @@ namespace RoadsideCare.Utils
                     newAIFieldDic.TryGetValue(fieldInfo.Name, out FieldInfo newAIField);
                     try
                     {
-                        if (fieldInfo.FieldType.DeclaringType != null && newAIField.FieldType.DeclaringType != null)
+                        if (fieldInfo.FieldType.DeclaringType != null && newAIField != null && newAIField.FieldType != null && newAIField.FieldType.DeclaringType != null)
                         {
                             var isTransferManager = fieldInfo.FieldType.DeclaringType.Name == "TransferManager";
                             var isExtendedTransferManager = newAIField.FieldType.DeclaringType.Name == "ExtendedTransferManager";
