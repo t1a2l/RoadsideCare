@@ -94,97 +94,100 @@ namespace RoadsideCare.Serializer
         }
 
         public static void LoadData(int iGlobalVersion, byte[] Data, ref int iIndex)
-    {
-        if (Data != null && Data.Length > iIndex)
         {
-            int iVehicleNeedsManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
+            if (Data != null && Data.Length > iIndex)
+            {
+                int iVehicleNeedsManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
 
-            Debug.Log("RoadsideCare VehiclesNeeds - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleNeedsManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+                Debug.Log("RoadsideCare VehiclesNeeds - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleNeedsManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
             
-            VehicleNeedsManager.Init();
+                VehicleNeedsManager.Init();
 
-            int VehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
+                int VehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
 
-            for (int i = 0; i < VehiclesFuel_Count; i++)
-            {
-                CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
+                for (int i = 0; i < VehiclesFuel_Count; i++)
+                {
+                    CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
 
-                ushort vehicleId = StorageData.ReadUInt16(Data, ref iIndex);
+                    ushort vehicleId = StorageData.ReadUInt16(Data, ref iIndex);
 
-                // Original target building related
-                ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
+                    // Original target building related
+                    ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
-                // Owner related
-                uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
+                    // Owner related
+                    uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
 
-                // Fuel related
-                float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
+                    // Fuel related
+                    float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
 
-                float fuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
+                    float fuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
-                bool isRefueling = StorageData.ReadBool(Data, ref iIndex);
+                    bool isRefueling = StorageData.ReadBool(Data, ref iIndex);
 
-                bool isGoingToRefuel = StorageData.ReadBool(Data, ref iIndex);
+                    bool isGoingToRefuel = StorageData.ReadBool(Data, ref iIndex);
 
-                // Dirt related
-                float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
+                    // Dirt related
+                    float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                bool isGoingToGetWashed = StorageData.ReadBool(Data, ref iIndex);
+                    bool isGoingToGetWashed = StorageData.ReadBool(Data, ref iIndex);
 
-                bool isBeingWashed = StorageData.ReadBool(Data, ref iIndex);
+                    bool isBeingWashed = StorageData.ReadBool(Data, ref iIndex);
 
-                // Wear related
-                float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
+                    // Wear related
+                    float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                bool isGoingToGetRepaired = StorageData.ReadBool(Data, ref iIndex);
+                    bool isGoingToGetRepaired = StorageData.ReadBool(Data, ref iIndex);
 
-                bool isBeingRepaired = StorageData.ReadBool(Data, ref iIndex);
+                    bool isBeingRepaired = StorageData.ReadBool(Data, ref iIndex);
 
-                // Vehicle issues
-                bool isBroken = StorageData.ReadBool(Data, ref iIndex);
+                    // Vehicle issues
+                    bool isBroken = StorageData.ReadBool(Data, ref iIndex);
 
-                bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
+                    bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
 
-                VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage, 
-                    wearPercentage, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, isGoingToGetRepaired, isBeingRepaired,
-                    isBroken, isOutOfFuel);
-                
-                CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
-            }
+                    if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
+                    {
+                        VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage,
+                            wearPercentage, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, isGoingToGetRepaired, isBeingRepaired,
+                            isBroken, isOutOfFuel);
+                    }
 
-            int ParkedVehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
+                    CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
+                }
 
-            for (int i = 0; i < ParkedVehiclesFuel_Count; i++)
-            {
-                CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
+                int ParkedVehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
 
-                ushort parkedVehicleId = StorageData.ReadUInt16(Data, ref iIndex);
+                for (int i = 0; i < ParkedVehiclesFuel_Count; i++)
+                {
+                    CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
 
-                // Owner related
-                uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
+                    ushort parkedVehicleId = StorageData.ReadUInt16(Data, ref iIndex);
 
-                // Fuel related
-                float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
+                    // Owner related
+                    uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
 
-                float fuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
+                    // Fuel related
+                    float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
 
-                // Dirt related
-                float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
+                    float fuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
-                // Wear related
-                float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
+                    // Dirt related
+                    float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                // Vehicle issues
-                bool isBroken = StorageData.ReadBool(Data, ref iIndex);
+                    // Wear related
+                    float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
+                    // Vehicle issues
+                    bool isBroken = StorageData.ReadBool(Data, ref iIndex);
 
-                VehicleNeedsManager.CreateParkedVehicleNeeds(parkedVehicleId, ownerId, fuelAmount, fuelCapacity, dirtPercentage, wearPercentage, isBroken, isOutOfFuel);
+                    bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
+
+                    VehicleNeedsManager.CreateParkedVehicleNeeds(parkedVehicleId, ownerId, fuelAmount, fuelCapacity, dirtPercentage, wearPercentage, isBroken, isOutOfFuel);
                     
-                CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
+                    CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
+                }
             }
         }
-    }
 
         private static void CheckStartTuple(string sTupleLocation, int iDataVersion, byte[] Data, ref int iIndex)
         {

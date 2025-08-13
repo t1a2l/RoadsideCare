@@ -64,7 +64,10 @@ namespace RoadsideCare.Serializer
 
                     List<ushort> fuelLanes = StorageData.ReadUShortList(Data, ref iIndex);
 
-                    GasStationManager.CreateGasStationBuilding(buildingId, fuelAmount, fuelLanes);
+                    if(!GasStationManager.GasStationBuildingExist(buildingId))
+                    {
+                        GasStationManager.CreateGasStationBuilding(buildingId, fuelAmount, fuelLanes);
+                    }
                 
                     CheckEndTuple($"Buffer({i})", iGasStationManagerVersion, Data, ref iIndex);
                 }
