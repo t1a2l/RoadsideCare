@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace RoadsideCare.Managers
 {
@@ -66,6 +67,11 @@ namespace RoadsideCare.Managers
                 gasStationStruct.FuelLanes = fuelLanes;
                 GasStationBuildings[buildingId] = gasStationStruct;
             }
+        }
+
+        public static bool SegmentIdBelongsToAGasStation(ushort segmentID)
+        {
+            return GasStationBuildings.Values.Any(s => s.FuelLanes.Any(v => v == segmentID));
         }
 
     }

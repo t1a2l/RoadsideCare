@@ -11,9 +11,9 @@ namespace RoadsideCare.HarmonyPatches
     {
         [HarmonyPatch(typeof(NetManager), "CreateSegment",
            [typeof(ushort), typeof(Randomizer), typeof(NetInfo), typeof(ushort), typeof(ushort), typeof(Vector3), typeof(Vector3), typeof(uint), typeof(uint), typeof(bool)],
-           [ArgumentType.Out, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
+           [ArgumentType.Out, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPostfix]
-        public static void CreateSegment(ref ushort segment, ref Randomizer randomizer, NetInfo info, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, uint buildIndex, uint modifiedIndex, bool invert)
+        public static void CreateSegment(ref ushort segment, ref Randomizer randomizer, NetInfo info, TreeInfo treeInfo, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, uint buildIndex, uint modifiedIndex, bool invert)
         {
             UpdateStationsNearSegment(segment, true);
         }
@@ -25,9 +25,9 @@ namespace RoadsideCare.HarmonyPatches
             UpdateStationsNearSegment(segment, false);
         }
 
-        [HarmonyPatch(typeof(NetManager), "UpdateSegment", [typeof(ushort)],[ArgumentType.Normal])]
+        [HarmonyPatch(typeof(NetManager), "UpdateSegment", [typeof(ushort), typeof(ushort), typeof(int)], [ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPostfix]
-        public static void UpdateSegment(ushort segment)
+        public static void UpdateSegment(ushort segment, ushort fromNode, int level)
         {
             UpdateStationsNearSegment(segment, true);
         }
@@ -35,6 +35,16 @@ namespace RoadsideCare.HarmonyPatches
         private static void UpdateStationsNearSegment(ushort segmentID, bool isNew)
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
+
+            if(segment.Info.m_netAI is not FuelLaneAI)
+            {
+                return;
+            }
+
+            if (GasStationManager.SegmentIdBelongsToAGasStation(segmentID))
+            {
+                return;
+            }
 
             Vector3 segPos = segment.m_bounds.center;
 
@@ -44,7 +54,7 @@ namespace RoadsideCare.HarmonyPatches
                 if ((b.m_flags & Building.Flags.Created) == 0)
                     continue;
 
-                if (b.Info.m_buildingAI is GasPumpAI && Vector3.Distance(segPos, b.m_position) <= 30f && segment.Info.m_netAI is FuelLaneAI && GasStationManager.GasStationBuildingExist(buildingID))
+                if (b.Info.m_buildingAI is GasPumpAI && Vector3.Distance(segPos, b.m_position) <= 30f && GasStationManager.GasStationBuildingExist(buildingID))
                 {
                     var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                     if (isNew)
