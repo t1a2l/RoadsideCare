@@ -106,14 +106,8 @@ namespace RoadsideCare.HarmonyPatches
         [HarmonyPrefix]
         public static bool SetTarget(ref PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
-            if(VehicleNeedsManager.VehicleNeedsExist(vehicleID) && targetBuilding != 0)
+            if(VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI();
-                if (buildingAI is not GasStationAI && buildingAI is not GasPumpAI && buildingAI is not VehicleWashAI && buildingAI is not RepairStationAI)
-                {
-                    return true; // Only allow setting target to gas station, gas pump, car wash or mechanic
-                }
-
                 var citizenId = GetOwnerID(vehicleID, ref data).Citizen;
                 if (citizenId != 0)
                 {
@@ -123,6 +117,12 @@ namespace RoadsideCare.HarmonyPatches
                         ref var citizenInstance = ref Singleton<CitizenManager>.instance.m_instances.m_buffer[citizenInstanceId];
 
                         data.m_targetBuilding = citizenInstance.m_targetBuilding;
+
+                        var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding].Info.GetAI();
+                        if (buildingAI is not GasStationAI && buildingAI is not GasPumpAI && buildingAI is not VehicleWashAI && buildingAI is not RepairStationAI)
+                        {
+                            return true; // Only allow setting target to gas station, gas pump, car wash or mechanic
+                        }
                         var pathToRoadsideCareBuilding = CustomPathFindAI.CustomStartPathFind(vehicleID, ref data);
                         var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
                         if (!pathToRoadsideCareBuilding)
