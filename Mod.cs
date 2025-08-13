@@ -29,11 +29,13 @@ namespace RoadsideCare
             try
             {
                 VehicleNeedsManager.Init();
+                GasStationManager.Init();
             }
             catch (Exception e)
             {
                 Debug.LogError(e.ToString());
                 VehicleNeedsManager.Deinit();
+                GasStationManager.Deinit();
             }
         }
 
@@ -43,6 +45,7 @@ namespace RoadsideCare
             try
             {
                 VehicleNeedsManager.Deinit();
+                GasStationManager.Deinit();
             }
             catch (Exception e)
             {
