@@ -18,6 +18,7 @@ namespace RoadsideCare.Managers
             // fuel related
             public float FuelAmount;
             public float FuelCapacity;
+            public float FuelPerFrame;
             public bool IsRefueling;
             public bool IsGoingToRefuel;
 
@@ -82,8 +83,8 @@ namespace RoadsideCare.Managers
 
         public static bool ParkedVehicleNeedsExist(ushort parkedVehicleId) => ParkedVehiclesNeeds.ContainsKey(parkedVehicleId);
 
-        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float fuelAmount, float fuelCapacity, 
-            float dirtPercentage, float wearPercenatge, bool isRefueling = false, bool isGoingToRefuel = false, bool isBeingWashed = false, 
+        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float fuelAmount, float fuelCapacity,
+            float dirtPercentage, float wearPercenatge, float fuelPerFrame = 0, bool isRefueling = false, bool isGoingToRefuel = false, bool isBeingWashed = false, 
             bool isGoingToGetWashed = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
         {
             var vehicleNeedsStruct = new VehicleNeedsStruct
@@ -92,6 +93,7 @@ namespace RoadsideCare.Managers
                 OwnerId = ownerId,
                 FuelAmount = fuelAmount,
                 FuelCapacity = fuelCapacity,
+                FuelPerFrame = fuelPerFrame,
                 IsRefueling = isRefueling,
                 IsGoingToRefuel = isGoingToRefuel,
                 DirtPercentage = dirtPercentage,
@@ -217,6 +219,15 @@ namespace RoadsideCare.Managers
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
                 vehicleNeedsStruct.FuelAmount = fuelAmount;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetFuelPerFrame(ushort vehicleId, float fuelPerFrame)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.FuelPerFrame = fuelPerFrame;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }

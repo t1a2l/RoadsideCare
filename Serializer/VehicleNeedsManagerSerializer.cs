@@ -43,6 +43,7 @@ namespace RoadsideCare.Serializer
                 // Fuel related
                 StorageData.WriteFloat(kvp.Value.FuelAmount, Data);
                 StorageData.WriteFloat(kvp.Value.FuelCapacity, Data);
+                StorageData.WriteFloat(kvp.Value.FuelPerFrame, Data);
                 StorageData.WriteBool(kvp.Value.IsRefueling, Data);
                 StorageData.WriteBool(kvp.Value.IsGoingToRefuel, Data);
 
@@ -122,6 +123,8 @@ namespace RoadsideCare.Serializer
 
                     float fuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
+                    float fuelPerFrame = StorageData.ReadFloat(Data, ref iIndex);
+
                     bool isRefueling = StorageData.ReadBool(Data, ref iIndex);
 
                     bool isGoingToRefuel = StorageData.ReadBool(Data, ref iIndex);
@@ -148,7 +151,7 @@ namespace RoadsideCare.Serializer
                     if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
                     {
                         VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage,
-                            wearPercentage, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, isGoingToGetRepaired, isBeingRepaired,
+                            wearPercentage, fuelPerFrame, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, isGoingToGetRepaired, isBeingRepaired,
                             isBroken, isOutOfFuel);
                     }
 
@@ -182,8 +185,11 @@ namespace RoadsideCare.Serializer
 
                     bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
 
-                    VehicleNeedsManager.CreateParkedVehicleNeeds(parkedVehicleId, ownerId, fuelAmount, fuelCapacity, dirtPercentage, wearPercentage, isBroken, isOutOfFuel);
-                    
+                    if (!VehicleNeedsManager.ParkedVehicleNeedsExist(parkedVehicleId))
+                    {
+                        VehicleNeedsManager.CreateParkedVehicleNeeds(parkedVehicleId, ownerId, fuelAmount, fuelCapacity, dirtPercentage, wearPercentage, isBroken, isOutOfFuel);
+                    }
+
                     CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
                 }
             }

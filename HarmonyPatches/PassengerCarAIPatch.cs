@@ -171,12 +171,14 @@ namespace RoadsideCare.HarmonyPatches
                     var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
                     var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizen.m_instance];
                     var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
-                    if (building.Info.GetAI() is GasStationAI && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
+                    if ((building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI) && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
                     {
                         data.m_custom = 0;
                         data.m_blockCounter = 0;
                         data.m_flags |= Vehicle.Flags.Stopped;
                         data.m_flags |= Vehicle.Flags.WaitingPath;
+                        float fuelPerFrame = (vehicleNeeds.FuelCapacity - vehicleNeeds.FuelAmount) / 20; // RefuelingDurationInFrames = 20 turn to option for fuel timing
+                        VehicleNeedsManager.SetFuelPerFrame(vehicleID, fuelPerFrame);
                         VehicleNeedsManager.SetIsRefuelingMode(vehicleID); // sets IsGoingToRefuel to false and IsRefueling to true
                         __result = false;
                         return false;
@@ -202,15 +204,14 @@ namespace RoadsideCare.HarmonyPatches
                     data.m_flags |= Vehicle.Flags.WaitingPath;
                     data.m_blockCounter = 0;
                     ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                    var gasStationAI = building.Info.GetAI() as GasStationAI;
-                    int RefuelingDurationInFrames = 20;
+
+                    int RefuelingDurationInFrames = 20; // turn to option for fuel timing
+                    var newFuelAmount = vehicleNeeds.FuelAmount + vehicleNeeds.FuelPerFrame;
+                    VehicleNeedsManager.SetFuelAmount(vehicleID, newFuelAmount); // add fuel to car 
+                    FuelVehicle(vehicleID, ref data, ref building, (int)newFuelAmount); // remove fuel for gas station or gas pump
 
                     if (data.m_custom >= RefuelingDurationInFrames)
                     {
-                        var neededFuel = (int)vehicleNeeds.FuelCapacity;
-                        VehicleNeedsManager.SetFuelAmount(vehicleID, neededFuel);
-                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
-
                         VehicleNeedsManager.SetNoneCareMode(vehicleID);
                         var targetBuilding = vehicleNeeds.OriginalTargetBuilding;
 
@@ -229,12 +230,19 @@ namespace RoadsideCare.HarmonyPatches
             }
         }
 
-        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building, int neededFuel)
+        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, ref Building building, int neededFuel)
         {
             bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
             if (!isElectric)
             {
-                gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref neededFuel);
+                if (building.Info.GetAI() is GasPumpAI gasPumpAI)
+                {
+                    gasPumpAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref neededFuel);
+                }
+                if (building.Info.GetAI() is GasStationAI gasStationAI)
+                {
+                    gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref neededFuel);
+                }
             }
             Singleton<EconomyManager>.instance.AddResource(EconomyManager.Resource.PublicIncome, 20, ItemClass.Service.Vehicles, ItemClass.SubService.None, ItemClass.Level.Level2);
         }

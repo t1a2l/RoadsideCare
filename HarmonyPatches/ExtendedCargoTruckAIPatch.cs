@@ -128,6 +128,8 @@ namespace RoadsideCare.HarmonyPatches
                         data.m_blockCounter = 0;
                         data.m_flags |= Vehicle.Flags.Stopped;
                         data.m_flags |= Vehicle.Flags.WaitingPath;
+                        float fuelPerFrame = (vehicleNeeds.FuelCapacity - vehicleNeeds.FuelAmount) / 20; // RefuelingDurationInFrames = 20 turn to option for fuel timing
+                        VehicleNeedsManager.SetFuelPerFrame(vehicleID, fuelPerFrame);
                         VehicleNeedsManager.SetIsRefuelingMode(vehicleID);
                         __result = false;
                         return false;
@@ -150,14 +152,14 @@ namespace RoadsideCare.HarmonyPatches
                     data.m_flags |= Vehicle.Flags.Stopped;
                     data.m_flags |= Vehicle.Flags.WaitingPath;
                     ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                    var gasStationAI = building.Info.GetAI() as GasStationAI;
-                    int RefuelingDurationInFrames = 10;
+
+                    int RefuelingDurationInFrames = 20; // turn to option for fuel timing
+                    var newFuelAmount = vehicleNeeds.FuelAmount + vehicleNeeds.FuelPerFrame;
+                    VehicleNeedsManager.SetFuelAmount(vehicleID, newFuelAmount); // add fuel to car 
+                    FuelVehicle(vehicleID, ref data, ref building, (int)newFuelAmount); // remove fuel for gas station or gas pump
+
                     if (data.m_custom >= RefuelingDurationInFrames)
                     {
-                        var neededFuel = (int)vehicleNeeds.FuelCapacity;
-                        VehicleNeedsManager.SetFuelAmount(vehicleID, neededFuel);
-                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
-
                         VehicleNeedsManager.SetNoneCareMode(vehicleID);
                         var targetBuilding = vehicleNeeds.OriginalTargetBuilding;
 
@@ -206,12 +208,19 @@ namespace RoadsideCare.HarmonyPatches
             return true;
         }
 
-        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building, int neededFuel)
+        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, ref Building building, int neededFuel)
         {
             ExtendedCargoTruckAI extendedCargoTruckAI = data.Info.GetAI() as ExtendedCargoTruckAI;
             if (extendedCargoTruckAI != null && !extendedCargoTruckAI.m_isElectric)
             {
-                gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref neededFuel);
+                if (building.Info.GetAI() is GasPumpAI gasPumpAI)
+                {
+                    gasPumpAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref neededFuel);
+                }
+                if (building.Info.GetAI() is GasStationAI gasStationAI)
+                {
+                    gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref neededFuel);
+                }
             }
             Singleton<EconomyManager>.instance.AddResource(EconomyManager.Resource.PublicIncome, 20, ItemClass.Service.Vehicles, ItemClass.SubService.None, ItemClass.Level.Level2);
         }
