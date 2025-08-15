@@ -17,7 +17,6 @@ namespace RoadsideCare.Serializer
         {
             var GasStationBuildings = GasStationManager.GetGasStationBuildings();
 
-
             // Write out metadata
             StorageData.WriteUInt16(iGAS_STATION_MANAGER_DATA_VERSION, Data);
             Debug.Log("iGAS_STATION_MANAGER_DATA_VERSION: " + iGAS_STATION_MANAGER_DATA_VERSION);
@@ -64,7 +63,7 @@ namespace RoadsideCare.Serializer
 
                     List<ushort> fuelLanes = StorageData.ReadUShortList(Data, ref iIndex);
 
-                    if(!GasStationManager.GasStationBuildingExist(buildingId))
+                    if (!GasStationManager.GasStationBuildingExist(buildingId))
                     {
                         GasStationManager.CreateGasStationBuilding(buildingId, fuelAmount, fuelLanes);
                     }
