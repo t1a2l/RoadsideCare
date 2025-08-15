@@ -1,8 +1,11 @@
 ﻿using System;
+using CitiesHarmony.API;
+using ColossalFramework;
+using ICities;
+using RoadsideCare.AI;
+using RoadsideCare.HarmonyPatches;
 using RoadsideCare.Managers;
 using RoadsideCare.Utils;
-using CitiesHarmony.API;
-using ICities;
 using UnityEngine;
 
 namespace RoadsideCare
@@ -53,7 +56,53 @@ namespace RoadsideCare
             }
         }
 
-        
+        public override void OnLevelLoaded(LoadMode mode)
+        {
+            switch (mode)
+            {
+                case LoadMode.LoadGame:
+                case LoadMode.NewGame:
+                case LoadMode.LoadScenario:
+                case LoadMode.NewGameFromScenario:
+                    break;
+
+                default:
+                    return;
+            }
+
+            var buildings = Singleton<BuildingManager>.instance.m_buildings;
+
+            for (ushort buildingId = 0; buildingId < buildings.m_size; buildingId++)
+            {
+                var building = buildings.m_buffer[buildingId];
+                if ((building.m_flags & Building.Flags.Created) != 0)
+                {
+                    if (building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI)
+                    {
+                        if (!GasStationManager.GasStationBuildingExist(buildingId))
+                        {
+                            GasStationManager.CreateGasStationBuilding(buildingId, 0, []);
+                        }
+                    }
+                }
+            }
+
+            var vehicles = Singleton<VehicleManager>.instance.m_vehicles;
+
+            for (ushort vehicleId = 0; vehicleId < vehicles.m_size; vehicleId++)
+            {
+                ref var vehicle = ref vehicles.m_buffer[vehicleId];
+                if ((vehicle.m_flags & Vehicle.Flags.Created) != 0)
+                {
+                    if (!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
+                    {
+                        VehicleAIPatch.CreateNeedsForVehicle(vehicle.Info.m_vehicleAI, vehicleId, ref vehicle);
+                    }
+                }
+            }
+        }
+
+
     }
 
 
