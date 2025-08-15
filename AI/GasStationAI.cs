@@ -267,10 +267,6 @@ namespace RoadsideCare.AI
             int num4 = Mathf.Min(Mathf.Max(num2 * 500, num * 4), 65535);
             data.m_customBuffer1 = (ushort)(data.m_customBuffer1 + num4 - num3);
             data.m_cashBuffer = GetCashCapacity(buildingID, ref data) >> 1;
-            if(!GasStationManager.GasStationBuildingExist(buildingID))
-            {
-                GasStationManager.CreateGasStationBuilding(buildingID, 0, []);
-            }
         }
 
         public override void EndRelocating(ushort buildingID, ref Building data)

@@ -151,10 +151,6 @@ namespace RoadsideCare.AI
         {
             base.BuildingLoaded(buildingID, ref data, version);
             EnsureCitizenUnits(buildingID, ref data);
-            if (!GasStationManager.GasStationBuildingExist(buildingID))
-            {
-                GasStationManager.CreateGasStationBuilding(buildingID, 0, []);
-            }
         }
 
         public override void EndRelocating(ushort buildingID, ref Building data)
