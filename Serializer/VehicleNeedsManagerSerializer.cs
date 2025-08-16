@@ -14,9 +14,9 @@ namespace RoadsideCare.Serializer
 
         public static void SaveData(FastList<byte> Data)
         {
-            var VehiclesNeeds = VehicleNeedsManager.GetVehicleNeeds();
+            var VehiclesNeeds = VehicleNeedsManager.GetVehiclesNeeds();
 
-            var ParkedVehiclesNeeds = VehicleNeedsManager.GetParkedVehicleNeeds();
+            var ParkedVehiclesNeeds = VehicleNeedsManager.GetParkedVehiclesNeeds();
 
             // Write out metadata
             StorageData.WriteUInt16(iVEHICLE_NEEDS_MANAGER_DATA_VERSION, Data);

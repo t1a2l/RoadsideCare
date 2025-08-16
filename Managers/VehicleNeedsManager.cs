@@ -71,9 +71,9 @@ namespace RoadsideCare.Managers
             ParkedVehiclesNeeds = [];
         }
 
-        public static Dictionary<ushort, VehicleNeedsStruct> GetVehicleNeeds() => VehiclesNeeds;
+        public static Dictionary<ushort, VehicleNeedsStruct> GetVehiclesNeeds() => VehiclesNeeds;
 
-        public static Dictionary<ushort, ParkedVehicleNeedsStruct> GetParkedVehicleNeeds() => ParkedVehiclesNeeds;
+        public static Dictionary<ushort, ParkedVehicleNeedsStruct> GetParkedVehiclesNeeds() => ParkedVehiclesNeeds;
 
         public static VehicleNeedsStruct GetVehicleNeeds(ushort vehicleId) => VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeeds) ? vehicleNeeds : default;
 
