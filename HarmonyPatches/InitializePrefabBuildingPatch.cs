@@ -39,16 +39,30 @@ namespace RoadsideCare.HarmonyPatches
                     PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
 
                     __instance.m_placementStyle = ItemClass.Placement.Manual;
-                }
-                else if ((__instance.name.ToLower().Contains("repairshop") || __instance.name.ToLower().Contains("repair shop")) && __instance.GetAI() is not RepairStationAI)
-                {
-                    var oldAI = __instance.GetComponent<PrefabAI>();
-                    UnityEngine.Object.DestroyImmediate(oldAI);
-                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<RepairStationAI>();
-                    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
+                    if (__instance.name.ToLower().Contains("sheetzcarwash") && __instance.GetAI() is VehicleWashAI vehicleWashAI1)
+                    {
+                        // sheetzcarwash
+                        vehicleWashAI1.m_allowSmallVehicles = true;
+                        vehicleWashAI1.m_allowLargeVehicles = false;
+                    }
+                    else if (__instance.name.ToLower().Contains("Modocero_TopUpGasStationCarWash") && __instance.GetAI() is VehicleWashAI vehicleWashAI2)
+                    {
+                        // Modocero_TopUpGasStationCarWash
+                        vehicleWashAI2.m_allowSmallVehicles = true;
+                        vehicleWashAI2.m_allowLargeVehicles = false;
+                    }
 
-                    __instance.m_placementStyle = ItemClass.Placement.Manual;
+
                 }
+                //else if ((__instance.name.ToLower().Contains("repairshop") || __instance.name.ToLower().Contains("repair shop")) && __instance.GetAI() is not RepairStationAI)
+                //{
+                //    var oldAI = __instance.GetComponent<PrefabAI>();
+                //    UnityEngine.Object.DestroyImmediate(oldAI);
+                //    var newAI = (PrefabAI)__instance.gameObject.AddComponent<RepairStationAI>();
+                //    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
+
+                //    __instance.m_placementStyle = ItemClass.Placement.Manual;
+                //}
             }
             catch (Exception e)
             {

@@ -118,11 +118,11 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                if (vehicleNeeds.IsGoingToRefuel)
+                if (vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToGetWashed)
                 {
                     var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
 
-                    if ((building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI) && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
+                    if ((building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI) && vehicleNeeds.IsGoingToRefuel && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
                     {
                         data.m_custom = 0;
                         data.m_blockCounter = 0;
@@ -131,6 +131,14 @@ namespace RoadsideCare.HarmonyPatches
                         float fuelPerFrame = (vehicleNeeds.FuelCapacity - vehicleNeeds.FuelAmount) / 20; // RefuelingDurationInFrames = 20 turn to option for fuel timing
                         VehicleNeedsManager.SetFuelPerFrame(vehicleID, fuelPerFrame);
                         VehicleNeedsManager.SetIsRefuelingMode(vehicleID);
+                        __result = false;
+                        return false;
+                    }
+                    else if (building.Info.GetAI() is VehicleWashAI && vehicleNeeds.IsGoingToGetWashed && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
+                    {
+                        data.m_blockCounter = 0;
+                        data.m_flags |= Vehicle.Flags.WaitingPath;
+                        VehicleNeedsManager.SetIsBeingWashedMode(vehicleID); // sets IsGoingToGetWashed to false and IsBeingWashed to true
                         __result = false;
                         return false;
                     }
@@ -170,6 +178,11 @@ namespace RoadsideCare.HarmonyPatches
 
                         __instance.SetTarget(vehicleID, ref data, targetBuilding);
                     }
+                }
+                else if (vehicleNeeds.IsBeingWashed)
+                {
+                    data.m_flags |= Vehicle.Flags.WaitingPath;
+                    data.m_blockCounter = 0;
                 }
             }
         }

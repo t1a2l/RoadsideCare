@@ -24,9 +24,9 @@ namespace RoadsideCare.HarmonyPatches
             VehicleInfo vehicleInfo = null;
             float fuelValue = 0;
             float dirtValue = 0;
-            float wearValue = 0;
+            //float wearValue = 0;
 
-            bool isBroken = false;
+            //bool isBroken = false;
             bool isOutOfFuel = false;
 
             if (___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && VehicleNeedsManager.VehicleNeedsExist(___m_InstanceID.Vehicle))
@@ -36,8 +36,8 @@ namespace RoadsideCare.HarmonyPatches
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleId);
                 fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
                 dirtValue = vehicleNeeds.DirtPercentage / 100;
-                wearValue = vehicleNeeds.WearPercentage / 100;
-                isBroken = vehicleNeeds.IsBroken;
+                //wearValue = vehicleNeeds.WearPercentage / 100;
+                //isBroken = vehicleNeeds.IsBroken;
                 isOutOfFuel = vehicleNeeds.IsOutOfFuel;
             }
             else if (___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && VehicleNeedsManager.ParkedVehicleNeedsExist(___m_InstanceID.ParkedVehicle))
@@ -47,8 +47,8 @@ namespace RoadsideCare.HarmonyPatches
                 var vehicleNeeds = VehicleNeedsManager.GetParkedVehicleNeeds(vehicleId);
                 fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
                 dirtValue = vehicleNeeds.DirtPercentage / 100;
-                wearValue = vehicleNeeds.WearPercentage / 100;
-                isBroken = vehicleNeeds.IsBroken;
+                //wearValue = vehicleNeeds.WearPercentage / 100;
+                //isBroken = vehicleNeeds.IsBroken;
                 isOutOfFuel = vehicleNeeds.IsOutOfFuel;
             }
 
@@ -67,14 +67,14 @@ namespace RoadsideCare.HarmonyPatches
                 }
                 Type.text += Environment.NewLine;
                 Type.text += " Dirt Percent:  " + dirtValue.ToString("#0%");
-                Type.text += Environment.NewLine;
-                Type.text += " Wear Percent:  " + wearValue.ToString("#0%");
+                //Type.text += Environment.NewLine;
+                //Type.text += " Wear Percent:  " + wearValue.ToString("#0%");
 
-                if(isBroken)
-                {
-                    Type.text += Environment.NewLine;
-                    Type.text += " Broke Down  ";
-                }
+                //if(isBroken)
+                //{
+                //    Type.text += Environment.NewLine;
+                //    Type.text += " Broke Down  ";
+                //}
 
                 if (isOutOfFuel)
                 {
@@ -102,21 +102,21 @@ namespace RoadsideCare.HarmonyPatches
                 Type.text += Environment.NewLine;
                 float fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
                 float dirtValue = vehicleNeeds.DirtPercentage / 100;
-                float wearValue = vehicleNeeds.WearPercentage / 100;
-                bool isBroken = vehicleNeeds.IsBroken;
+                //float wearValue = vehicleNeeds.WearPercentage / 100;
+                //bool isBroken = vehicleNeeds.IsBroken;
                 bool isOutOfFuel = vehicleNeeds.IsOutOfFuel;
 
                 Type.text += "Fuel Percent:  " + fuelValue.ToString("#0%");
                 Type.text += Environment.NewLine;
                 Type.text += " Dirt Percent:  " + dirtValue.ToString("#0%");
-                Type.text += Environment.NewLine;
-                Type.text += " Wear Percent:  " + wearValue.ToString("#0%");
+                //Type.text += Environment.NewLine;
+                //Type.text += " Wear Percent:  " + wearValue.ToString("#0%");
 
-                if (isBroken)
-                {
-                    Type.text += Environment.NewLine;
-                    Type.text += " Broke Down  ";
-                }
+                //if (isBroken)
+                //{
+                //    Type.text += Environment.NewLine;
+                //    Type.text += " Broke Down  ";
+                //}
 
                 if (isOutOfFuel)
                 {
