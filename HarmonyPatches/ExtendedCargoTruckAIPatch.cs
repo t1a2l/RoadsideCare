@@ -95,7 +95,7 @@ namespace RoadsideCare.HarmonyPatches
                         // Only set going to refuel if path was found
                         VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
                     }
-                    else if (buildingAI is VehicleWashAI)
+                    else if (buildingAI is VehicleWashBuildingAI)
                     {
                         // Only set going to wash vehicle if path was found
                         VehicleNeedsManager.SetIsGoingToGetWashedMode(vehicleID);
