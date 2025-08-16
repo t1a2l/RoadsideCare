@@ -18,7 +18,7 @@ namespace RoadsideCare.HarmonyPatches
             var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI();
             if (vehicleId != 0 && VehicleNeedsManager.VehicleNeedsExist(vehicleId))
             {
-                if(buildingAI is GasStationAI || buildingAI is GasPumpAI || buildingAI is VehicleWashAI || buildingAI is RepairStationAI)
+                if(buildingAI is GasStationAI || buildingAI is GasPumpAI || buildingAI is VehicleWashBuildingAI || buildingAI is RepairStationAI)
                 {
                     var targetBuilding = data.m_targetBuilding != 0 ? data.m_targetBuilding : targetIndex;
                     VehicleNeedsManager.SetOriginalTargetBuilding(vehicleId, targetBuilding);

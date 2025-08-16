@@ -31,21 +31,21 @@ namespace RoadsideCare.HarmonyPatches
 
                     __instance.m_placementStyle = ItemClass.Placement.Manual;
                 }
-                else if ((__instance.name.ToLower().Contains("carwash") || __instance.name.ToLower().Contains("car wash")) && __instance.GetAI() is not VehicleWashAI)
+                else if ((__instance.name.ToLower().Contains("carwash") || __instance.name.ToLower().Contains("car wash")) && __instance.GetAI() is not VehicleWashBuildingAI)
                 {
                     var oldAI = __instance.GetComponent<PrefabAI>();
                     UnityEngine.Object.DestroyImmediate(oldAI);
-                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<VehicleWashAI>();
+                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<VehicleWashBuildingAI>();
                     PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
 
                     __instance.m_placementStyle = ItemClass.Placement.Manual;
-                    if (__instance.name.ToLower().Contains("sheetzcarwash") && __instance.GetAI() is VehicleWashAI vehicleWashAI1)
+                    if (__instance.name.ToLower().Contains("sheetzcarwash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI1)
                     {
                         // sheetzcarwash
                         vehicleWashAI1.m_allowSmallVehicles = true;
                         vehicleWashAI1.m_allowLargeVehicles = false;
                     }
-                    else if (__instance.name.ToLower().Contains("Modocero_TopUpGasStationCarWash") && __instance.GetAI() is VehicleWashAI vehicleWashAI2)
+                    else if (__instance.name.ToLower().Contains("Modocero_TopUpGasStationCarWash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI2)
                     {
                         // Modocero_TopUpGasStationCarWash
                         vehicleWashAI2.m_allowSmallVehicles = true;

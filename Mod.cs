@@ -33,12 +33,14 @@ namespace RoadsideCare
             {
                 VehicleNeedsManager.Init();
                 GasStationManager.Init();
+                VehicleWashBuildingManager.Init();
             }
             catch (Exception e)
             {
                 Debug.LogError(e.ToString());
                 VehicleNeedsManager.Deinit();
                 GasStationManager.Deinit();
+                VehicleWashBuildingManager.Deinit();
             }
         }
 
@@ -49,6 +51,7 @@ namespace RoadsideCare
             {
                 VehicleNeedsManager.Deinit();
                 GasStationManager.Deinit();
+                VehicleWashBuildingManager.Deinit();
             }
             catch (Exception e)
             {
@@ -82,6 +85,13 @@ namespace RoadsideCare
                         if (!GasStationManager.GasStationBuildingExist(buildingId))
                         {
                             GasStationManager.CreateGasStationBuilding(buildingId, 0, []);
+                        }
+                    }
+                    else if (building.Info.GetAI() is VehicleWashBuildingAI)
+                    {
+                        if (!VehicleWashBuildingManager.VehicleWashBuildingExist(buildingId))
+                        {
+                            VehicleWashBuildingManager.CreateVehicleWashBuilding(buildingId, []);
                         }
                     }
                 }

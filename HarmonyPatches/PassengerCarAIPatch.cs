@@ -119,7 +119,7 @@ namespace RoadsideCare.HarmonyPatches
                         data.m_targetBuilding = citizenInstance.m_targetBuilding;
 
                         var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding].Info.GetAI();
-                        if (buildingAI is not GasStationAI && buildingAI is not GasPumpAI && buildingAI is not VehicleWashAI && buildingAI is not RepairStationAI)
+                        if (buildingAI is not GasStationAI && buildingAI is not GasPumpAI && buildingAI is not VehicleWashBuildingAI && buildingAI is not RepairStationAI)
                         {
                             return true; // Only allow setting target to gas station, gas pump, car wash or mechanic
                         }
@@ -140,7 +140,7 @@ namespace RoadsideCare.HarmonyPatches
                                 // Only set going to refuel if path was found
                                 VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
                             }
-                            else if (buildingAI is VehicleWashAI)
+                            else if (buildingAI is VehicleWashBuildingAI)
                             {
                                 // Only set going to wash vehicle if path was found
                                 VehicleNeedsManager.SetIsGoingToGetWashedMode(vehicleID);
@@ -183,7 +183,7 @@ namespace RoadsideCare.HarmonyPatches
                         __result = false;
                         return false;
                     }
-                    else if (building.Info.GetAI() is VehicleWashAI && vehicleNeeds.IsGoingToGetWashed && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
+                    else if (building.Info.GetAI() is VehicleWashBuildingAI && vehicleNeeds.IsGoingToGetWashed && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
                     {
                         data.m_blockCounter = 0;
                         data.m_flags |= Vehicle.Flags.WaitingPath;

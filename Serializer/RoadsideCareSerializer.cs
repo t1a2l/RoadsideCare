@@ -56,6 +56,16 @@ namespace RoadsideCare.Serializer
                                 CheckStartTuple("GasStationManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 GasStationManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
                                 CheckEndTuple("GasStationManagerSerializer", SaveGameFileVersion, Data, ref Index);
+
+                                if (Index == Data.Length)
+                                {
+                                    break;
+                                }
+
+                                // Vehicle Wash Buildings settings
+                                CheckStartTuple("VehicleWashBuildingManagerSerializer", SaveGameFileVersion, Data, ref Index);
+                                VehicleWashBuildingManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
+                                CheckEndTuple("VehicleWashBuildingManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 break;
                             }
                         }
@@ -108,6 +118,11 @@ namespace RoadsideCare.Serializer
                     // Vehicles Needs settings
                     StorageData.WriteUInt32(uiTUPLE_START, Data);
                     GasStationManagerSerializer.SaveData(Data);
+                    StorageData.WriteUInt32(uiTUPLE_END, Data);
+
+                    // Vehicles Needs settings
+                    StorageData.WriteUInt32(uiTUPLE_START, Data);
+                    VehicleWashBuildingManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
 
                     m_serializableData.SaveData(DataID, Data.ToArray());
