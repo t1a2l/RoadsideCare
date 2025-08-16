@@ -23,7 +23,7 @@ namespace RoadsideCare.AI
             {
                 if (vehicleData.m_sourceBuilding != 0)
                 {
-                    if (TryGetRandomFuelLaneTarget(vehicleData.m_sourceBuilding, out Vector3 targetPos))
+                    if (TryGetRandomLaneTarget(vehicleData.m_sourceBuilding, out Vector3 targetPos))
                     {
                         // Use fuel lane position as path target
                         return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, targetPos, true, true, false);
@@ -40,9 +40,9 @@ namespace RoadsideCare.AI
             }
             else if (vehicleData.m_targetBuilding != 0)
             {
-                if (TryGetRandomFuelLaneTarget(vehicleData.m_targetBuilding, out Vector3 targetPos))
+                if (TryGetRandomLaneTarget(vehicleData.m_targetBuilding, out Vector3 targetPos))
                 {
-                    // Use fuel lane position as path target
+                    // Use random lane position as path target
                     return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, targetPos, true, true, false);
                 }
                 else
@@ -57,34 +57,51 @@ namespace RoadsideCare.AI
             return false;
         }
 
-        public static bool TryGetRandomFuelLaneTarget(ushort buildingID, out Vector3 targetPos)
+        public static bool TryGetRandomLaneTarget(ushort buildingID, out Vector3 targetPos)
         {
             targetPos = Vector3.zero;
             var building = BuildingManager.instance.m_buildings.m_buffer[buildingID];
             if ((building.m_flags & Building.Flags.Created) == 0) return false;
 
-            var ai = building.Info.m_buildingAI as GasPumpAI;
-            if (ai == null || !GasStationManager.GasStationBuildingExist(buildingID))
+            if(building.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID))
             {
-                return false;
+                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+
+                if (gasStation.FuelLanes == null || gasStation.FuelLanes.Count == 0)
+                {
+                    return false;
+                }
+
+                // Pick a random segment from the fuel lanes
+                ushort segmentId = gasStation.FuelLanes[Random.Range(0, gasStation.FuelLanes.Count)];
+                var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
+
+                if (laneId == 0) return false;
+
+                // Get lane position for pathfinding target
+                targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
+                return true;
             }
-
-            var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
-
-            if (gasStation.FuelLanes == null || gasStation.FuelLanes.Count == 0)
+            else if (building.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
             {
-                return false;
+                var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
+
+                if (vehicleWashBuilding.VehicleWashLanes == null || vehicleWashBuilding.VehicleWashLanes.Count == 0)
+                {
+                    return false;
+                }
+
+                // Pick a random segment from the fuel lanes
+                ushort segmentId = vehicleWashBuilding.VehicleWashLanes[Random.Range(0, vehicleWashBuilding.VehicleWashLanes.Count)];
+                var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
+
+                if (laneId == 0) return false;
+
+                // Get lane position for pathfinding target
+                targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
+                return true;
             }
-
-            // Pick a random segment from the fuel lanes
-            ushort segmentId = gasStation.FuelLanes[Random.Range(0, gasStation.FuelLanes.Count)];
-            var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
-
-            if (laneId == 0) return false;
-
-            // Get lane position for pathfinding target
-            targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
-            return true;
+            return false;
         }
     }
 }
