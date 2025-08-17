@@ -33,7 +33,7 @@ namespace RoadsideCare.Serializer
                 StorageData.WriteUInt16(kvp.Key, Data);
 
                 StorageData.WriteInt32(kvp.Value.FuelAmount, Data);
-                StorageData.WriteUShortList(kvp.Value.FuelLanes, Data);
+                StorageData.WriteUShortList(kvp.Value.FuelPoints, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -61,11 +61,11 @@ namespace RoadsideCare.Serializer
 
                     int fuelAmount = StorageData.ReadInt32(Data, ref iIndex);
 
-                    List<ushort> fuelLanes = StorageData.ReadUShortList(Data, ref iIndex);
+                    List<ushort> fuelPoints = StorageData.ReadUShortList(Data, ref iIndex);
 
                     if (!GasStationManager.GasStationBuildingExist(buildingId))
                     {
-                        GasStationManager.CreateGasStationBuilding(buildingId, fuelAmount, fuelLanes);
+                        GasStationManager.CreateGasStationBuilding(buildingId, fuelAmount, fuelPoints);
                     }
                 
                     CheckEndTuple($"Buffer({i})", iGasStationManagerVersion, Data, ref iIndex);

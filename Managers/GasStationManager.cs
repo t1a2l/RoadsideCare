@@ -10,7 +10,7 @@ namespace RoadsideCare.Managers
         public struct GasStationStruct
         {
             public int FuelAmount;
-            public List<ushort> FuelLanes;
+            public List<ushort> FuelPoints;
         }
 
         public static void Init()
@@ -29,12 +29,12 @@ namespace RoadsideCare.Managers
 
         public static bool GasStationBuildingExist(ushort buildingId) => GasStationBuildings.ContainsKey(buildingId);
 
-        public static GasStationStruct CreateGasStationBuilding(ushort buildingId, int fuelAmount, List<ushort> fuelLanes)
+        public static GasStationStruct CreateGasStationBuilding(ushort buildingId, int fuelAmount, List<ushort> fuelPoints)
         {
             var gasStationStruct = new GasStationStruct
             {
                 FuelAmount = fuelAmount,
-                FuelLanes = fuelLanes
+                FuelPoints = fuelPoints
             };
 
             GasStationBuildings.Add(buildingId, gasStationStruct);
@@ -60,18 +60,18 @@ namespace RoadsideCare.Managers
             }
         }
 
-        public static void SetFuelLanes(ushort buildingId, List<ushort> fuelLanes)
+        public static void SetFuelPoints(ushort buildingId, List<ushort> fuelPoints)
         {
             if (GasStationBuildings.TryGetValue(buildingId, out var gasStationStruct))
             {
-                gasStationStruct.FuelLanes = fuelLanes;
+                gasStationStruct.FuelPoints = fuelPoints;
                 GasStationBuildings[buildingId] = gasStationStruct;
             }
         }
 
         public static bool SegmentIdBelongsToAGasStation(ushort segmentID)
         {
-            return GasStationBuildings.Values.Any(s => s.FuelLanes.Any(v => v == segmentID));
+            return GasStationBuildings.Values.Any(s => s.FuelPoints.Any(v => v == segmentID));
         }
 
     }

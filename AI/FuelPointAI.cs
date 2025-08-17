@@ -1,6 +1,6 @@
 ﻿namespace RoadsideCare.AI
 {
-    public class FuelLaneAI : RoadAI
+    public class FuelPointAI : RoadAI
     {
     }
 }

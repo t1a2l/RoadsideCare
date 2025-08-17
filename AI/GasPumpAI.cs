@@ -297,7 +297,7 @@ namespace RoadsideCare.AI
                     offer.Active = false;
                     Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer);
                 }
-                RefreshFuelLanes(buildingID);
+                RefreshFuelPoints(buildingID);
             }
         }
 
@@ -345,13 +345,13 @@ namespace RoadsideCare.AI
             target = position;
         }
 
-        public void RefreshFuelLanes(ushort buildingID)
+        public void RefreshFuelPoints(ushort buildingID)
         {
             if(GasStationManager.GasStationBuildingExist(buildingID))
             {
                 var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                 var toRemove = new List<ushort>();
-                foreach (var segmentId in gasStation.FuelLanes)
+                foreach (var segmentId in gasStation.FuelPoints)
                 {
                     if (segmentId == 0 || !NetManager.instance.m_segments.m_buffer[segmentId].m_flags.IsFlagSet(NetSegment.Flags.Created))
                     {
@@ -361,7 +361,7 @@ namespace RoadsideCare.AI
 
                     ushort infoIndex = NetManager.instance.m_segments.m_buffer[segmentId].m_infoIndex;
                     NetInfo info = PrefabCollection<NetInfo>.GetPrefab(infoIndex);
-                    if (info.m_netAI is not FuelLaneAI)
+                    if (info.m_netAI is not FuelPointAI)
                     {
                         toRemove.Add(segmentId);
                     }
@@ -369,10 +369,10 @@ namespace RoadsideCare.AI
 
                 foreach (var seg in toRemove)
                 {
-                    gasStation.FuelLanes.Remove(seg);
+                    gasStation.FuelPoints.Remove(seg);
                 }
 
-                GasStationManager.SetFuelLanes(buildingID, gasStation.FuelLanes);
+                GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
             }
         }
 
