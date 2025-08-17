@@ -184,7 +184,8 @@ namespace RoadsideCare.HarmonyPatches
                         VehicleNeedsManager.SetIsBeingWashedMode(vehicleID);
                         float washingTimeInSeconds = segment.m_averageLength / VehicleWashLaneAI.GetMaxSpeed(position.m_segment, ref segment);
                         float totalWashingFrames = washingTimeInSeconds * 60f;
-                        VehicleNeedsManager.SetDirtPerFrame(vehicleID, totalWashingFrames);
+                        float dirtToRemoveThisFrame = vehicleNeeds.DirtPercentage / totalWashingFrames;
+                        VehicleNeedsManager.SetDirtPerFrame(vehicleID, dirtToRemoveThisFrame);
                     }
                 }
 
@@ -193,11 +194,11 @@ namespace RoadsideCare.HarmonyPatches
                     data.m_flags |= Vehicle.Flags.WaitingPath;
                     data.m_blockCounter = 0;
 
-                    float dirtToRemoveThisFrame = vehicleNeeds.DirtPercentage / vehicleNeeds.DirtPerFrame;
+                    float dirtLevel = vehicleNeeds.DirtPercentage - vehicleNeeds.DirtPerFrame;
 
-                    VehicleNeedsManager.SetDirtPercentage(vehicleID, dirtToRemoveThisFrame);
+                    VehicleNeedsManager.SetDirtPercentage(vehicleID, dirtLevel);
 
-                    if (dirtToRemoveThisFrame <= 0)
+                    if (dirtLevel <= 0)
                     {
                         VehicleNeedsManager.SetNoneCareMode(vehicleID);
                         var targetBuilding = vehicleNeeds.OriginalTargetBuilding;
