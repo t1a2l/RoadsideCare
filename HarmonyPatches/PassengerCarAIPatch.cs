@@ -12,8 +12,6 @@ namespace RoadsideCare.HarmonyPatches
     [HarmonyPatch]
     public static class PassengerCarAIPatch
     {
-        public static ushort Chosen_Building = 0;
-
         const float FRAMES_PER_UNIT = 3.2f;
 
         [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
