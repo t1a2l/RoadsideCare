@@ -67,13 +67,13 @@ namespace RoadsideCare.AI
             {
                 var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
 
-                if (gasStation.FuelLanes == null || gasStation.FuelLanes.Count == 0)
+                if (gasStation.FuelPoints == null || gasStation.FuelPoints.Count == 0)
                 {
                     return false;
                 }
 
                 // Pick a random segment from the fuel lanes
-                ushort segmentId = gasStation.FuelLanes[Random.Range(0, gasStation.FuelLanes.Count)];
+                ushort segmentId = gasStation.FuelPoints[Random.Range(0, gasStation.FuelPoints.Count)];
                 var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
 
                 if (laneId == 0) return false;
@@ -86,20 +86,30 @@ namespace RoadsideCare.AI
             {
                 var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
 
-                if (vehicleWashBuilding.VehicleWashLanes == null || vehicleWashBuilding.VehicleWashLanes.Count == 0)
+                if (vehicleWashBuilding.VehicleWashLanes != null && vehicleWashBuilding.VehicleWashLanes.Count > 0)
                 {
-                    return false;
+                    // Pick a random segment from the fuel lanes
+                    ushort segmentId = vehicleWashBuilding.VehicleWashLanes[Random.Range(0, vehicleWashBuilding.VehicleWashLanes.Count)];
+                    var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
+
+                    if (laneId == 0) return false;
+
+                    // Get lane position for pathfinding target
+                    targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(1f); // end of lane
+                    return true;
                 }
+                else if (vehicleWashBuilding.VehicleWashPoints != null && vehicleWashBuilding.VehicleWashPoints.Count > 0)
+                {
+                    // Pick a random segment from the fuel lanes
+                    ushort segmentId = vehicleWashBuilding.VehicleWashPoints[Random.Range(0, vehicleWashBuilding.VehicleWashPoints.Count)];
+                    var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
 
-                // Pick a random segment from the fuel lanes
-                ushort segmentId = vehicleWashBuilding.VehicleWashLanes[Random.Range(0, vehicleWashBuilding.VehicleWashLanes.Count)];
-                var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
+                    if (laneId == 0) return false;
 
-                if (laneId == 0) return false;
-
-                // Get lane position for pathfinding target
-                targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(1f); // end of lane
-                return true;
+                    // Get lane position for pathfinding target
+                    targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
+                    return true;
+                }
             }
             return false;
         }

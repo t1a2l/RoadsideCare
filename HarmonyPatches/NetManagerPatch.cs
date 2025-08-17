@@ -15,33 +15,21 @@ namespace RoadsideCare.HarmonyPatches
         [HarmonyPostfix]
         public static void CreateSegment(ref ushort segment, ref Randomizer randomizer, NetInfo info, TreeInfo treeInfo, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, uint buildIndex, uint modifiedIndex, bool invert)
         {
-            UpdateRoadCareBuildingsNearSegment(segment, true);
+            UpdateRoadCareBuildingsNearNewSegment(segment);
         }
 
         [HarmonyPatch(typeof(NetManager), "ReleaseSegment")]
         [HarmonyPostfix]
         public static void ReleaseSegment(ushort segment, bool keepNodes)
         {
-            UpdateRoadCareBuildingsNearSegment(segment, false);
+            UpdateRoadCareBuildingsNearRemovedSegment(segment);
         }
 
-        [HarmonyPatch(typeof(NetManager), "UpdateSegment", [typeof(ushort), typeof(ushort), typeof(int)], [ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
-        [HarmonyPostfix]
-        public static void UpdateSegment(ushort segment, ushort fromNode, int level)
-        {
-            UpdateRoadCareBuildingsNearSegment(segment, true);
-        }
-
-        private static void UpdateRoadCareBuildingsNearSegment(ushort segmentID, bool isNew)
+        private static void UpdateRoadCareBuildingsNearNewSegment(ushort segmentID)
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
 
-            if(segment.Info.m_netAI is not FuelLaneAI && segment.Info.m_netAI is not VehicleWashLaneAI)
-            {
-                return;
-            }
-
-            if (GasStationManager.SegmentIdBelongsToAGasStation(segmentID) && VehicleWashBuildingManager.SegmentIdBelongsToAVehicleWashBuilding(segmentID))
+            if(segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashPointAI)
             {
                 return;
             }
@@ -52,42 +40,81 @@ namespace RoadsideCare.HarmonyPatches
                 if ((b.m_flags & Building.Flags.Created) == 0)
                     continue;
 
-                if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID))
+                if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID) && 
+                    segment.Info.m_netAI is FuelPointAI && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                 {
-                    if(segment.Info.m_netAI is FuelLaneAI && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
-                    {
-                        var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
-                        if (isNew)
-                        {
-                            if (!gasStation.FuelLanes.Contains(segmentID))
-                            {
-                                gasStation.FuelLanes.Add(segmentID);
-                            }
-                        }
-                        else
-                        {
-                            gasStation.FuelLanes.Remove(segmentID);
-                        }
-                        GasStationManager.SetFuelLanes(buildingID, gasStation.FuelLanes);
-                    }
+                    var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                    gasStation.FuelPoints.Add(segmentID);
+                    GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
+                    break;
                 }
                 else if (b.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
                 {
                     if (segment.Info.m_netAI is VehicleWashLaneAI && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
-                        if (isNew)
-                        {
-                            if (!vehicleWashBuilding.VehicleWashLanes.Contains(segmentID))
-                            {
-                                vehicleWashBuilding.VehicleWashLanes.Add(segmentID);
-                            }
-                        }
-                        else
-                        {
-                            vehicleWashBuilding.VehicleWashLanes.Remove(segmentID);
-                        }
+                        vehicleWashBuilding.VehicleWashLanes.Add(segmentID);
                         VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
+                        break;
+                    }
+                    else if (segment.Info.m_netAI is VehicleWashPointAI && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    {
+                        var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
+                        vehicleWashBuilding.VehicleWashPoints.Add(segmentID);
+                        VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private static void UpdateRoadCareBuildingsNearRemovedSegment(ushort segmentID)
+        {
+            var segment = NetManager.instance.m_segments.m_buffer[segmentID];
+
+            if (segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashPointAI)
+            {
+                return;
+            }
+
+            if (segment.Info.m_netAI is FuelPointAI && !GasStationManager.SegmentIdBelongsToAGasStation(segmentID))
+            {
+                return;
+            }
+
+            if ((segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashPointAI) && !VehicleWashBuildingManager.SegmentIdBelongsToAVehicleWashBuilding(segmentID))
+            {
+                return;
+            }
+
+            for (ushort buildingID = 0; buildingID < BuildingManager.MAX_BUILDING_COUNT; buildingID++)
+            {
+                ref Building b = ref BuildingManager.instance.m_buildings.m_buffer[buildingID];
+                if ((b.m_flags & Building.Flags.Created) == 0)
+                    continue;
+
+                if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID) && segment.Info.m_netAI is FuelPointAI)
+                {
+                    var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                    gasStation.FuelPoints.Remove(segmentID);
+                    GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
+                    break;
+                }
+                else if (b.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
+                {
+                    if (segment.Info.m_netAI is VehicleWashLaneAI)
+                    {
+                        var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
+                        vehicleWashBuilding.VehicleWashLanes.Remove(segmentID);
+                        VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
+                        break;
+                    }
+                    else if (segment.Info.m_netAI is VehicleWashPointAI)
+                    {
+                        var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
+                        vehicleWashBuilding.VehicleWashPoints.Remove(segmentID);
+                        VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
+                        break;
                     }
                 }
             }
