@@ -10,7 +10,7 @@ namespace RoadsideCare.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 1;
+        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 2;
 
         public static void SaveData(FastList<byte> Data)
         {
@@ -49,11 +49,13 @@ namespace RoadsideCare.Serializer
 
                 // Dirt related
                 StorageData.WriteFloat(kvp.Value.DirtPercentage, Data);
+                StorageData.WriteFloat(kvp.Value.DirtPerFrame, Data);
                 StorageData.WriteBool(kvp.Value.IsGoingToGetWashed, Data);
                 StorageData.WriteBool(kvp.Value.IsBeingWashed, Data);
 
                 // Wear related
                 StorageData.WriteFloat(kvp.Value.WearPercentage, Data);
+                StorageData.WriteFloat(kvp.Value.WearPerFrame, Data);
                 StorageData.WriteBool(kvp.Value.IsGoingToGetRepaired, Data);
                 StorageData.WriteBool(kvp.Value.IsBeingRepaired, Data);
 
@@ -132,12 +134,26 @@ namespace RoadsideCare.Serializer
                     // Dirt related
                     float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
+                    float dirtPerFrame = 0f;
+
+                    if (iVehicleNeedsManagerVersion >= 2)
+                    {
+                        dirtPerFrame = StorageData.ReadFloat(Data, ref iIndex);
+                    }
+
                     bool isGoingToGetWashed = StorageData.ReadBool(Data, ref iIndex);
 
                     bool isBeingWashed = StorageData.ReadBool(Data, ref iIndex);
 
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
+
+                    float wearPerFrame = 0f;
+
+                    if (iVehicleNeedsManagerVersion >= 2)
+                    {
+                        wearPerFrame = StorageData.ReadFloat(Data, ref iIndex);
+                    }
 
                     bool isGoingToGetRepaired = StorageData.ReadBool(Data, ref iIndex);
 
@@ -151,8 +167,8 @@ namespace RoadsideCare.Serializer
                     if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
                     {
                         VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage,
-                            wearPercentage, fuelPerFrame, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, isGoingToGetRepaired, isBeingRepaired,
-                            isBroken, isOutOfFuel);
+                            wearPercentage, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, 
+                            isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
                     }
 
                     CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);

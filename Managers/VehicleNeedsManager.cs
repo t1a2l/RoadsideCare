@@ -24,11 +24,13 @@ namespace RoadsideCare.Managers
 
             // dirt related
             public float DirtPercentage;
+            public float DirtPerFrame;
             public bool IsBeingWashed;
             public bool IsGoingToGetWashed;
 
             // wear related
             public float WearPercentage;
+            public float WearPerFrame;
             public bool IsBeingRepaired;
             public bool IsGoingToGetRepaired;
 
@@ -84,8 +86,9 @@ namespace RoadsideCare.Managers
         public static bool ParkedVehicleNeedsExist(ushort parkedVehicleId) => ParkedVehiclesNeeds.ContainsKey(parkedVehicleId);
 
         public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float fuelAmount, float fuelCapacity,
-            float dirtPercentage, float wearPercenatge, float fuelPerFrame = 0, bool isRefueling = false, bool isGoingToRefuel = false, bool isBeingWashed = false, 
-            bool isGoingToGetWashed = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
+            float dirtPercentage, float wearPercenatge, float fuelPerFrame = 0, float dirtPerFrame = 0, float wearPerFrame = 0, bool isRefueling = false, 
+            bool isGoingToRefuel = false, bool isBeingWashed = false, bool isGoingToGetWashed = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, 
+            bool isBroken = false, bool isOutOfFuel = false)
         {
             var vehicleNeedsStruct = new VehicleNeedsStruct
             {
@@ -97,9 +100,11 @@ namespace RoadsideCare.Managers
                 IsRefueling = isRefueling,
                 IsGoingToRefuel = isGoingToRefuel,
                 DirtPercentage = dirtPercentage,
+                DirtPerFrame = dirtPerFrame,
                 IsBeingWashed = isBeingWashed,
                 IsGoingToGetWashed = isGoingToGetWashed,
                 WearPercentage = wearPercenatge,
+                WearPerFrame = wearPerFrame,
                 IsBeingRepaired = isBeingRepaired,
                 IsGoingToGetRepaired = isGoingToGetRepaired,
                 IsBroken = isBroken,
@@ -280,6 +285,15 @@ namespace RoadsideCare.Managers
             }
         }
 
+        public static void SetDirtPerFrame(ushort vehicleId, float dirtPerFrame)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.DirtPerFrame = dirtPerFrame;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
         public static void SetIsGoingToGetWashedMode(ushort vehicleId)
         {
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
@@ -306,6 +320,15 @@ namespace RoadsideCare.Managers
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
                 vehicleNeedsStruct.WearPercentage = wearPercentage;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetWearPerFrame(ushort vehicleId, float wearPerFrame)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.WearPerFrame = wearPerFrame;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }

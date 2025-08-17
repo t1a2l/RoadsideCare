@@ -98,7 +98,7 @@ namespace RoadsideCare.AI
                 if (laneId == 0) return false;
 
                 // Get lane position for pathfinding target
-                targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
+                targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(1f); // end of lane
                 return true;
             }
             return false;

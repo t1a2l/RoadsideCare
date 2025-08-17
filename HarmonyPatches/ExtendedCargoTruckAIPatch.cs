@@ -118,11 +118,11 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                if (vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToGetWashed)
+                if (vehicleNeeds.IsGoingToRefuel)
                 {
                     var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
 
-                    if ((building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI) && vehicleNeeds.IsGoingToRefuel && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
+                    if ((building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI) && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
                     {
                         data.m_custom = 0;
                         data.m_blockCounter = 0;
@@ -131,14 +131,6 @@ namespace RoadsideCare.HarmonyPatches
                         float fuelPerFrame = (vehicleNeeds.FuelCapacity - vehicleNeeds.FuelAmount) / 20; // RefuelingDurationInFrames = 20 turn to option for fuel timing
                         VehicleNeedsManager.SetFuelPerFrame(vehicleID, fuelPerFrame);
                         VehicleNeedsManager.SetIsRefuelingMode(vehicleID);
-                        __result = false;
-                        return false;
-                    }
-                    else if (building.Info.GetAI() is VehicleWashBuildingAI && vehicleNeeds.IsGoingToGetWashed && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
-                    {
-                        data.m_blockCounter = 0;
-                        data.m_flags |= Vehicle.Flags.WaitingPath;
-                        VehicleNeedsManager.SetIsBeingWashedMode(vehicleID); // sets IsGoingToGetWashed to false and IsBeingWashed to true
                         __result = false;
                         return false;
                     }
@@ -179,10 +171,42 @@ namespace RoadsideCare.HarmonyPatches
                         __instance.SetTarget(vehicleID, ref data, targetBuilding);
                     }
                 }
-                else if (vehicleNeeds.IsBeingWashed)
+                if (vehicleNeeds.IsGoingToGetWashed)
+                {
+                    byte b = data.m_pathPositionIndex;
+
+                    PathManager.instance.m_pathUnits.m_buffer[data.m_path].GetPosition(b >> 1, out var position);
+
+                    ref var segment = ref Singleton<NetManager>.instance.m_segments.m_buffer[position.m_segment];
+
+                    if (segment.Info.GetAI() is VehicleWashLaneAI)
+                    {
+                        VehicleNeedsManager.SetIsBeingWashedMode(vehicleID);
+                        float washingTimeInSeconds = segment.m_averageLength / VehicleWashLaneAI.GetMaxSpeed(position.m_segment, ref segment);
+                        float totalWashingFrames = washingTimeInSeconds * 60f;
+                        VehicleNeedsManager.SetDirtPerFrame(vehicleID, totalWashingFrames);
+                    }
+                }
+
+                if (vehicleNeeds.IsBeingWashed)
                 {
                     data.m_flags |= Vehicle.Flags.WaitingPath;
                     data.m_blockCounter = 0;
+
+                    float dirtToRemoveThisFrame = vehicleNeeds.DirtPercentage / vehicleNeeds.DirtPerFrame;
+
+                    VehicleNeedsManager.SetDirtPercentage(vehicleID, dirtToRemoveThisFrame);
+
+                    if (dirtToRemoveThisFrame <= 0)
+                    {
+                        VehicleNeedsManager.SetNoneCareMode(vehicleID);
+                        var targetBuilding = vehicleNeeds.OriginalTargetBuilding;
+
+                        data.m_flags &= ~Vehicle.Flags.WaitingPath;
+                        VehicleNeedsManager.SetOriginalTargetBuilding(vehicleID, 0);
+
+                        __instance.SetTarget(vehicleID, ref data, targetBuilding);
+                    }
                 }
             }
         }
