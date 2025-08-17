@@ -10,6 +10,7 @@ namespace RoadsideCare.Managers
         public struct VehicleWashStruct
         {
             public List<ushort> VehicleWashLanes;
+            public List<ushort> VehicleWashPoints;
         }
 
         public static void Init()
@@ -28,11 +29,12 @@ namespace RoadsideCare.Managers
 
         public static bool VehicleWashBuildingExist(ushort buildingId) => VehicleWashBuildings.ContainsKey(buildingId);
 
-        public static VehicleWashStruct CreateVehicleWashBuilding(ushort buildingId, List<ushort> vehicleWashLanes)
+        public static VehicleWashStruct CreateVehicleWashBuilding(ushort buildingId, List<ushort> vehicleWashLanes, List<ushort> vehicleWashPoints)
         {
             var vehicleWashStruct = new VehicleWashStruct
             {
-                VehicleWashLanes = vehicleWashLanes
+                VehicleWashLanes = vehicleWashLanes,
+                VehicleWashPoints = vehicleWashPoints
             };
 
             VehicleWashBuildings.Add(buildingId, vehicleWashStruct);
@@ -57,9 +59,18 @@ namespace RoadsideCare.Managers
             }
         }
 
+        public static void SetVehicleWashPoints(ushort buildingId, List<ushort> vehicleWashPoints)
+        {
+            if (VehicleWashBuildings.TryGetValue(buildingId, out var vehicleWashStruct))
+            {
+                vehicleWashStruct.VehicleWashPoints = vehicleWashPoints;
+                VehicleWashBuildings[buildingId] = vehicleWashStruct;
+            }
+        }
+
         public static bool SegmentIdBelongsToAVehicleWashBuilding(ushort segmentID)
         {
-            return VehicleWashBuildings.Values.Any(s => s.VehicleWashLanes.Any(v => v == segmentID));
+            return VehicleWashBuildings.Values.Any(s => s.VehicleWashLanes.Any(v => v == segmentID) || s.VehicleWashPoints.Any(v => v == segmentID));
         }
 
     }

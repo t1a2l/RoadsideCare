@@ -3,11 +3,9 @@ using ColossalFramework;
 using ColossalFramework.Globalization;
 using HarmonyLib;
 using MoreTransferReasons;
-using MoreTransferReasons.AI;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
 using UnityEngine;
-using static RenderManager;
 
 namespace RoadsideCare.HarmonyPatches
 {
@@ -15,6 +13,8 @@ namespace RoadsideCare.HarmonyPatches
     public static class PassengerCarAIPatch
     {
         public static ushort Chosen_Building = 0;
+
+        const float FRAMES_PER_UNIT = 3.2f;
 
         [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
         [HarmonyPrefix]
@@ -186,6 +186,47 @@ namespace RoadsideCare.HarmonyPatches
                         return false;
                     }
                 }
+                if (vehicleNeeds.IsGoingToGetWashed)
+                {
+                    var citizenId = __instance.GetOwnerID(vehicleID, ref data).Citizen;
+                    var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
+                    var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizen.m_instance];
+                    var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
+                    if (building.Info.GetAI() is VehicleWashBuildingAI && Vector3.Distance(data.GetLastFramePosition(), building.m_position) < 80f)
+                    {
+                        data.m_custom = 0;
+                        data.m_blockCounter = 0;
+                        data.m_flags |= Vehicle.Flags.Stopped;
+                        data.m_flags |= Vehicle.Flags.WaitingPath;
+                        VehicleNeedsManager.SetIsBeingWashedMode(vehicleID);
+
+                        byte b = data.m_pathPositionIndex;
+
+                        PathManager.instance.m_pathUnits.m_buffer[data.m_path].GetPosition(b >> 1, out var position);
+
+                        ref var segment = ref Singleton<NetManager>.instance.m_segments.m_buffer[position.m_segment];
+
+                        float totalWashingFrames = segment.m_averageLength * FRAMES_PER_UNIT;
+
+                        // The dirt to remove is calculated once and stored
+                        float dirtToRemovePerFrame = vehicleNeeds.DirtPercentage / totalWashingFrames;
+
+                        VehicleNeedsManager.SetDirtPerFrame(vehicleID, dirtToRemovePerFrame);
+
+                        __result = false;
+                        return false;
+                    }
+                }
+                if (vehicleNeeds.IsBeingWashed && vehicleNeeds.IsAtWashStart)
+                {
+                    data.m_blockCounter = 0;
+                    data.m_flags |= Vehicle.Flags.Stopped;
+                    data.m_flags |= Vehicle.Flags.WaitingPath;
+                    VehicleNeedsManager.SetIsAtWashExitMode(vehicleID);
+                    __result = false;
+                    return false;
+                }
+
             }
             return true;
         }
@@ -231,28 +272,56 @@ namespace RoadsideCare.HarmonyPatches
 
                 if (vehicleNeeds.IsGoingToGetWashed)
                 {
-                    byte b = data.m_pathPositionIndex;
+                    ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
 
-                    PathManager.instance.m_pathUnits.m_buffer[data.m_path].GetPosition(b >> 1, out var position);
+                    float distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
 
-                    ref var segment = ref Singleton<NetManager>.instance.m_segments.m_buffer[position.m_segment];
-
-                    if (segment.Info.GetAI() is VehicleWashLaneAI)
+                    if (distance <= 80f)
                     {
-                        VehicleNeedsManager.SetIsBeingWashedMode(vehicleID);
-                        float washingTimeInSeconds = segment.m_averageLength / VehicleWashLaneAI.GetMaxSpeed(position.m_segment, ref segment);
-                        float totalWashingFrames = washingTimeInSeconds * 60f;
-                        float dirtToRemoveThisFrame = vehicleNeeds.DirtPercentage / totalWashingFrames;
-                        VehicleNeedsManager.SetDirtPerFrame(vehicleID, dirtToRemoveThisFrame);
+                        byte b = data.m_pathPositionIndex;
+
+                        PathManager.instance.m_pathUnits.m_buffer[data.m_path].GetPosition(b >> 1, out var position);
+
+                        ref var segment = ref Singleton<NetManager>.instance.m_segments.m_buffer[position.m_segment];
+
+                        if (segment.Info.GetAI() is VehicleWashLaneAI)
+                        {
+                            VehicleNeedsManager.SetIsAtWashStartMode(vehicleID);
+                            VehicleNeedsManager.SetIsBeingWashedMode(vehicleID);
+
+                            float totalWashingFrames = segment.m_averageLength * FRAMES_PER_UNIT;
+
+                            // The dirt to remove is calculated once and stored
+                            float dirtToRemovePerFrame = vehicleNeeds.DirtPercentage / totalWashingFrames;
+
+                            VehicleNeedsManager.SetDirtPerFrame(vehicleID, dirtToRemovePerFrame);
+                        }
                     }
                 }
 
                 if (vehicleNeeds.IsBeingWashed)
                 {
-                    data.m_flags |= Vehicle.Flags.WaitingPath;
-                    data.m_blockCounter = 0;
+                    ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
 
-                    float dirtLevel = vehicleNeeds.DirtPercentage - vehicleNeeds.DirtPerFrame;
+                    float distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
+
+                    if (distance > 80f)
+                    {
+                        VehicleNeedsManager.SetNoneCareMode(vehicleID);
+                        return;
+                    }
+
+                    if(vehicleNeeds.IsAtWashExit)
+                    {
+                        data.m_flags |= Vehicle.Flags.Stopped;
+                        data.m_flags |= Vehicle.Flags.WaitingPath;
+                        data.m_blockCounter = 0;
+                    }
+
+                    float dirtToRemoveThisFrame = vehicleNeeds.DirtPerFrame;
+
+                    // This is the check that will prevent the number from going negative
+                    float dirtLevel = Mathf.Max(0, vehicleNeeds.DirtPercentage - dirtToRemoveThisFrame);
 
                     VehicleNeedsManager.SetDirtPercentage(vehicleID, dirtLevel);
 

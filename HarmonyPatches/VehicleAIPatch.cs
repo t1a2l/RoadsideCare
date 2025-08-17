@@ -174,7 +174,7 @@ namespace RoadsideCare.HarmonyPatches
 
             bool shouldWash = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
 
-            if (shouldWash || vehicleNeeds.DirtPercentage >= 80)
+            if ((shouldWash && vehicleNeeds.DirtPercentage > 20) || vehicleNeeds.DirtPercentage >= 80)
             {
                 ExtendedTransferManager.Offer offer = default;
                 offer.Citizen = instance.GetOwnerID(vehicleID, ref data).Citizen;

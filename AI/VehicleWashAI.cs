@@ -114,7 +114,7 @@ namespace RoadsideCare.AI
             base.CreateBuilding(buildingID, ref data);
             int workCount = m_workPlaceCount0;
             Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, buildingID, 0, 0, workCount, 0, 0, 0);
-            VehicleWashBuildingManager.CreateVehicleWashBuilding(buildingID, []);
+            VehicleWashBuildingManager.CreateVehicleWashBuilding(buildingID, [], []);
         }
 
         public override void ReleaseBuilding(ushort buildingID, ref Building data)

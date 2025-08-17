@@ -91,7 +91,7 @@ namespace RoadsideCare
                     {
                         if (!VehicleWashBuildingManager.VehicleWashBuildingExist(buildingId))
                         {
-                            VehicleWashBuildingManager.CreateVehicleWashBuilding(buildingId, []);
+                            VehicleWashBuildingManager.CreateVehicleWashBuilding(buildingId, [], []);
                         }
                     }
                 }

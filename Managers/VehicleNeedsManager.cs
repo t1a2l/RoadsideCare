@@ -27,6 +27,8 @@ namespace RoadsideCare.Managers
             public float DirtPerFrame;
             public bool IsBeingWashed;
             public bool IsGoingToGetWashed;
+            public bool IsAtWashStart;
+            public bool IsAtWashExit;
 
             // wear related
             public float WearPercentage;
@@ -87,7 +89,7 @@ namespace RoadsideCare.Managers
 
         public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float fuelAmount, float fuelCapacity,
             float dirtPercentage, float wearPercenatge, float fuelPerFrame = 0, float dirtPerFrame = 0, float wearPerFrame = 0, bool isRefueling = false, 
-            bool isGoingToRefuel = false, bool isBeingWashed = false, bool isGoingToGetWashed = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, 
+            bool isGoingToRefuel = false, bool isBeingWashed = false, bool isGoingToGetWashed = false, bool isAtWashStart = false, bool isAtWashExit = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, 
             bool isBroken = false, bool isOutOfFuel = false)
         {
             var vehicleNeedsStruct = new VehicleNeedsStruct
@@ -102,6 +104,8 @@ namespace RoadsideCare.Managers
                 DirtPercentage = dirtPercentage,
                 DirtPerFrame = dirtPerFrame,
                 IsBeingWashed = isBeingWashed,
+                IsAtWashStart = isAtWashStart,
+                IsAtWashExit = isAtWashExit,
                 IsGoingToGetWashed = isGoingToGetWashed,
                 WearPercentage = wearPercenatge,
                 WearPerFrame = wearPerFrame,
@@ -313,6 +317,25 @@ namespace RoadsideCare.Managers
             }
         }
 
+        public static void SetIsAtWashStartMode(ushort vehicleId)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.IsAtWashStart = true;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetIsAtWashExitMode(ushort vehicleId)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.IsAtWashExit = true;
+                vehicleNeedsStruct.IsAtWashStart = false;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
         // Wear related methods
 
         public static void SetWearPercentage(ushort vehicleId, float wearPercentage)
@@ -378,6 +401,7 @@ namespace RoadsideCare.Managers
             {
                 vehicleNeedsStruct.IsRefueling = false;
                 vehicleNeedsStruct.IsBeingWashed = false;
+                vehicleNeedsStruct.IsAtWashExit = false;
                 vehicleNeedsStruct.IsBeingRepaired = false;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }

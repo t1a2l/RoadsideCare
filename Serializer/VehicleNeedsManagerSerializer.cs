@@ -52,6 +52,8 @@ namespace RoadsideCare.Serializer
                 StorageData.WriteFloat(kvp.Value.DirtPerFrame, Data);
                 StorageData.WriteBool(kvp.Value.IsGoingToGetWashed, Data);
                 StorageData.WriteBool(kvp.Value.IsBeingWashed, Data);
+                StorageData.WriteBool(kvp.Value.IsAtWashStart, Data);
+                StorageData.WriteBool(kvp.Value.IsAtWashExit, Data);
 
                 // Wear related
                 StorageData.WriteFloat(kvp.Value.WearPercentage, Data);
@@ -145,6 +147,16 @@ namespace RoadsideCare.Serializer
 
                     bool isBeingWashed = StorageData.ReadBool(Data, ref iIndex);
 
+                    bool isAtWashStart = false;
+
+                    bool isAtWashExit = false;
+
+                    if (iVehicleNeedsManagerVersion >= 2)
+                    {
+                        isAtWashStart = StorageData.ReadBool(Data, ref iIndex);
+                        isAtWashExit = StorageData.ReadBool(Data, ref iIndex);
+                    }
+
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
@@ -167,8 +179,8 @@ namespace RoadsideCare.Serializer
                     if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
                     {
                         VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage,
-                            wearPercentage, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed, 
-                            isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
+                            wearPercentage, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed,
+                            isAtWashStart, isAtWashExit, isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
                     }
 
                     CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
