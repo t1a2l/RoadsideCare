@@ -50,10 +50,11 @@ namespace RoadsideCare.Serializer
                 // Dirt related
                 StorageData.WriteFloat(kvp.Value.DirtPercentage, Data);
                 StorageData.WriteFloat(kvp.Value.DirtPerFrame, Data);
-                StorageData.WriteBool(kvp.Value.IsGoingToGetWashed, Data);
-                StorageData.WriteBool(kvp.Value.IsBeingWashed, Data);
-                StorageData.WriteBool(kvp.Value.IsAtWashStart, Data);
-                StorageData.WriteBool(kvp.Value.IsAtWashExit, Data);
+                StorageData.WriteBool(kvp.Value.IsAtTunnelWash, Data);
+                StorageData.WriteBool(kvp.Value.IsAtTunnelWashExit, Data);
+                StorageData.WriteBool(kvp.Value.IsGoingToTunnelWash, Data);
+                StorageData.WriteBool(kvp.Value.IsAtHandWash, Data);
+                StorageData.WriteBool(kvp.Value.IsGoingToHandWash, Data);
 
                 // Wear related
                 StorageData.WriteFloat(kvp.Value.WearPercentage, Data);
@@ -136,36 +137,22 @@ namespace RoadsideCare.Serializer
                     // Dirt related
                     float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                    float dirtPerFrame = 0f;
+                    float dirtPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
-                    if (iVehicleNeedsManagerVersion >= 2)
-                    {
-                        dirtPerFrame = StorageData.ReadFloat(Data, ref iIndex);
-                    }
+                    bool isAtTunnelWash = StorageData.ReadBool(Data, ref iIndex);
 
-                    bool isGoingToGetWashed = StorageData.ReadBool(Data, ref iIndex);
+                    bool isAtTunnelWashExit = StorageData.ReadBool(Data, ref iIndex);
 
-                    bool isBeingWashed = StorageData.ReadBool(Data, ref iIndex);
+                    bool isGoingToTunnelWash = StorageData.ReadBool(Data, ref iIndex);
 
-                    bool isAtWashStart = false;
+                    bool isAtHandWash = StorageData.ReadBool(Data, ref iIndex);
 
-                    bool isAtWashExit = false;
-
-                    if (iVehicleNeedsManagerVersion >= 2)
-                    {
-                        isAtWashStart = StorageData.ReadBool(Data, ref iIndex);
-                        isAtWashExit = StorageData.ReadBool(Data, ref iIndex);
-                    }
+                    bool isGoingToHandWash = StorageData.ReadBool(Data, ref iIndex);
 
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                    float wearPerFrame = 0f;
-
-                    if (iVehicleNeedsManagerVersion >= 2)
-                    {
-                        wearPerFrame = StorageData.ReadFloat(Data, ref iIndex);
-                    }
+                    float wearPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
                     bool isGoingToGetRepaired = StorageData.ReadBool(Data, ref iIndex);
 
@@ -179,8 +166,8 @@ namespace RoadsideCare.Serializer
                     if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
                     {
                         VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage,
-                            wearPercentage, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isGoingToGetWashed, isBeingWashed,
-                            isAtWashStart, isAtWashExit, isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
+                            wearPercentage, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isAtTunnelWash, isAtTunnelWashExit,
+                            isGoingToTunnelWash, isAtHandWash, isGoingToHandWash, isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
                     }
 
                     CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);

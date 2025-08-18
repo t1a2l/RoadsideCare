@@ -27,8 +27,8 @@ namespace RoadsideCare.HarmonyPatches
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
                 if (__instance is ExtendedCargoTruckAI || __instance is PassengerCarAI)
                 {
-                    bool isOnWayToCareCenter = vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToGetWashed || vehicleNeeds.IsGoingToGetRepaired;
-                    bool isBeingCaredFor = vehicleNeeds.IsRefueling || vehicleNeeds.IsBeingWashed || vehicleNeeds.IsBeingRepaired;
+                    bool isOnWayToCareCenter = vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash || vehicleNeeds.IsGoingToTunnelWash || vehicleNeeds.IsGoingToGetRepaired;
+                    bool isBeingCaredFor = vehicleNeeds.IsRefueling || vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash || vehicleNeeds.IsBeingRepaired;
 
                     if (!isBeingCaredFor && !isOnWayToCareCenter)
                     {
@@ -48,7 +48,7 @@ namespace RoadsideCare.HarmonyPatches
                     var newAmount = vehicleNeeds.FuelAmount - 0.01f;
                     VehicleNeedsManager.SetFuelAmount(vehicleID, newAmount);
                 }
-                if (vehicleNeeds.DirtPercentage < 100 && !vehicleNeeds.IsBeingWashed)
+                if (vehicleNeeds.DirtPercentage < 100 && !(vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash))
                 {
                     var newDirtPercentage = vehicleNeeds.DirtPercentage + 0.01f;
                     VehicleNeedsManager.SetDirtPercentage(vehicleID, newDirtPercentage);

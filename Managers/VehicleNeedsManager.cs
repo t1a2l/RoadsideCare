@@ -25,10 +25,11 @@ namespace RoadsideCare.Managers
             // dirt related
             public float DirtPercentage;
             public float DirtPerFrame;
-            public bool IsBeingWashed;
-            public bool IsGoingToGetWashed;
-            public bool IsAtWashStart;
-            public bool IsAtWashExit;
+            public bool IsAtTunnelWash;
+            public bool IsAtTunnelWashExit;
+            public bool IsGoingToTunnelWash;
+            public bool IsAtHandWash;
+            public bool IsGoingToHandWash;
 
             // wear related
             public float WearPercentage;
@@ -89,8 +90,8 @@ namespace RoadsideCare.Managers
 
         public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float fuelAmount, float fuelCapacity,
             float dirtPercentage, float wearPercenatge, float fuelPerFrame = 0, float dirtPerFrame = 0, float wearPerFrame = 0, bool isRefueling = false, 
-            bool isGoingToRefuel = false, bool isBeingWashed = false, bool isGoingToGetWashed = false, bool isAtWashStart = false, bool isAtWashExit = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, 
-            bool isBroken = false, bool isOutOfFuel = false)
+            bool isGoingToRefuel = false, bool isAtTunnelWash = false, bool isAtTunnelWashExit = false, bool isGoingToTunnelWash = false, bool isAtHandWash = false, 
+            bool isGoingToHandWash = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
         {
             var vehicleNeedsStruct = new VehicleNeedsStruct
             {
@@ -103,10 +104,11 @@ namespace RoadsideCare.Managers
                 IsGoingToRefuel = isGoingToRefuel,
                 DirtPercentage = dirtPercentage,
                 DirtPerFrame = dirtPerFrame,
-                IsBeingWashed = isBeingWashed,
-                IsAtWashStart = isAtWashStart,
-                IsAtWashExit = isAtWashExit,
-                IsGoingToGetWashed = isGoingToGetWashed,
+                IsAtTunnelWash = isAtTunnelWash,
+                IsAtTunnelWashExit = isAtTunnelWashExit,
+                IsGoingToTunnelWash = isGoingToTunnelWash,
+                IsAtHandWash = isAtHandWash,
+                IsGoingToHandWash = isGoingToHandWash,
                 WearPercentage = wearPercenatge,
                 WearPerFrame = wearPerFrame,
                 IsBeingRepaired = isBeingRepaired,
@@ -298,40 +300,49 @@ namespace RoadsideCare.Managers
             }
         }
 
-        public static void SetIsGoingToGetWashedMode(ushort vehicleId)
+        public static void SetIsAtTunnelWashMode(ushort vehicleId)
         {
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
-                vehicleNeedsStruct.IsGoingToGetWashed = true;
+                vehicleNeedsStruct.IsAtTunnelWash = true;
+                vehicleNeedsStruct.IsGoingToTunnelWash = false;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }
 
-        public static void SetIsBeingWashedMode(ushort vehicleId)
+        public static void SetIsAtTunnelWashExitMode(ushort vehicleId)
         {
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
-                vehicleNeedsStruct.IsBeingWashed = true;
-                vehicleNeedsStruct.IsGoingToGetWashed = false;
+                vehicleNeedsStruct.IsAtTunnelWashExit = true;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }
 
-        public static void SetIsAtWashStartMode(ushort vehicleId)
+        public static void SetIsGoingToTunnelWashMode(ushort vehicleId)
         {
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
-                vehicleNeedsStruct.IsAtWashStart = true;
+                vehicleNeedsStruct.IsGoingToTunnelWash = true;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }
 
-        public static void SetIsAtWashExitMode(ushort vehicleId)
+        public static void SetIsAtHandWashMode(ushort vehicleId)
         {
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
-                vehicleNeedsStruct.IsAtWashExit = true;
-                vehicleNeedsStruct.IsAtWashStart = false;
+                vehicleNeedsStruct.IsAtHandWash = true;
+                vehicleNeedsStruct.IsGoingToHandWash = false;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetIsGoingToHandWashMode(ushort vehicleId)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.IsGoingToHandWash = true;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }
@@ -393,16 +404,29 @@ namespace RoadsideCare.Managers
             }
         }
 
-        // clear going to building
+        // clear going to building or at building modes
 
-        public static void SetNoneCareMode(ushort vehicleId)
+        public static void ClearAtLocationMode(ushort vehicleId)
         {
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
                 vehicleNeedsStruct.IsRefueling = false;
-                vehicleNeedsStruct.IsBeingWashed = false;
-                vehicleNeedsStruct.IsAtWashExit = false;
+                vehicleNeedsStruct.IsAtTunnelWash = false;
+                vehicleNeedsStruct.IsAtTunnelWashExit = false;
+                vehicleNeedsStruct.IsAtHandWash = false;
                 vehicleNeedsStruct.IsBeingRepaired = false;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void ClearGoingToMode(ushort vehicleId)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.IsGoingToRefuel = false;
+                vehicleNeedsStruct.IsGoingToTunnelWash = false;
+                vehicleNeedsStruct.IsGoingToHandWash = false;
+                vehicleNeedsStruct.IsGoingToGetRepaired = false;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }

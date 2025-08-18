@@ -23,7 +23,7 @@ namespace RoadsideCare.AI
             {
                 if (vehicleData.m_sourceBuilding != 0)
                 {
-                    if (TryGetRandomLaneTarget(vehicleData.m_sourceBuilding, out Vector3 targetPos))
+                    if (TryGetRandomLaneTarget(vehicleID, vehicleData.m_sourceBuilding, out Vector3 targetPos))
                     {
                         // Use fuel lane position as path target
                         return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, targetPos, true, true, false);
@@ -40,7 +40,7 @@ namespace RoadsideCare.AI
             }
             else if (vehicleData.m_targetBuilding != 0)
             {
-                if (TryGetRandomLaneTarget(vehicleData.m_targetBuilding, out Vector3 targetPos))
+                if (TryGetRandomLaneTarget(vehicleID, vehicleData.m_targetBuilding, out Vector3 targetPos))
                 {
                     // Use random lane position as path target
                     return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, targetPos, true, true, false);
@@ -57,7 +57,7 @@ namespace RoadsideCare.AI
             return false;
         }
 
-        public static bool TryGetRandomLaneTarget(ushort buildingID, out Vector3 targetPos)
+        public static bool TryGetRandomLaneTarget(ushort vehicleID, ushort buildingID, out Vector3 targetPos)
         {
             targetPos = Vector3.zero;
             var building = BuildingManager.instance.m_buildings.m_buffer[buildingID];
@@ -80,13 +80,43 @@ namespace RoadsideCare.AI
 
                 // Get lane position for pathfinding target
                 targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
+                VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
                 return true;
             }
             else if (building.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
             {
                 var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
 
-                if (vehicleWashBuilding.VehicleWashLanes != null && vehicleWashBuilding.VehicleWashLanes.Count > 0)
+                var washLanesExist = vehicleWashBuilding.VehicleWashLanes != null && vehicleWashBuilding.VehicleWashLanes.Count > 0;
+
+                var washPointsExist = vehicleWashBuilding.VehicleWashPoints != null && vehicleWashBuilding.VehicleWashPoints.Count > 0;
+
+                var selectWashLane = false;
+
+                var selectWashPoint = false;
+
+                if (washLanesExist && washPointsExist)
+                {
+                    bool chooseRandom = Singleton<SimulationManager>.instance.m_randomizer.Int32(1U) == 0;
+                    if (chooseRandom)
+                    {
+                        selectWashLane = true;
+                    }
+                    else
+                    {
+                        selectWashPoint = true;
+                    }
+                }
+                else if (washLanesExist)
+                {
+                    selectWashLane = true;
+                }
+                else if (washPointsExist)
+                {
+                    selectWashPoint = true;
+                }
+
+                if (selectWashLane)
                 {
                     // Pick a random segment from the fuel lanes
                     ushort segmentId = vehicleWashBuilding.VehicleWashLanes[Random.Range(0, vehicleWashBuilding.VehicleWashLanes.Count)];
@@ -96,9 +126,11 @@ namespace RoadsideCare.AI
 
                     // Get lane position for pathfinding target
                     targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(1f); // end of lane
+                    VehicleNeedsManager.SetIsGoingToTunnelWashMode(vehicleID);
                     return true;
                 }
-                else if (vehicleWashBuilding.VehicleWashPoints != null && vehicleWashBuilding.VehicleWashPoints.Count > 0)
+
+                if (selectWashPoint)
                 {
                     // Pick a random segment from the fuel lanes
                     ushort segmentId = vehicleWashBuilding.VehicleWashPoints[Random.Range(0, vehicleWashBuilding.VehicleWashPoints.Count)];
@@ -108,6 +140,7 @@ namespace RoadsideCare.AI
 
                     // Get lane position for pathfinding target
                     targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
+                    VehicleNeedsManager.SetIsGoingToHandWashMode(vehicleID);
                     return true;
                 }
             }
