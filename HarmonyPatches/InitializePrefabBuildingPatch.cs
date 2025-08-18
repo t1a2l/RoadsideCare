@@ -13,56 +13,52 @@ namespace RoadsideCare.HarmonyPatches
         {
             try
             {
-                if ((__instance.name.ToLower().Contains("gas station") || __instance.name.ToLower().Contains("gasstation")) && __instance.GetAI() is not GasStationAI)
+                if(__instance.m_placementStyle == ItemClass.Placement.Manual)
                 {
-                    var oldAI = __instance.GetComponent<PrefabAI>();
-                    UnityEngine.Object.DestroyImmediate(oldAI);
-                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<GasStationAI>();
-                    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
-
-                    __instance.m_placementStyle = ItemClass.Placement.Manual;
-                }
-                else if ((__instance.name.ToLower().Contains("gaspumps") || __instance.name.ToLower().Contains("gas pumps")) && __instance.GetAI() is not GasPumpAI)
-                {
-                    var oldAI = __instance.GetComponent<PrefabAI>();
-                    UnityEngine.Object.DestroyImmediate(oldAI);
-                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<GasPumpAI>();
-                    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
-
-                    __instance.m_placementStyle = ItemClass.Placement.Manual;
-                }
-                else if ((__instance.name.ToLower().Contains("carwash") || __instance.name.ToLower().Contains("car wash")) && __instance.GetAI() is not VehicleWashBuildingAI)
-                {
-                    var oldAI = __instance.GetComponent<PrefabAI>();
-                    UnityEngine.Object.DestroyImmediate(oldAI);
-                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<VehicleWashBuildingAI>();
-                    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
-
-                    __instance.m_placementStyle = ItemClass.Placement.Manual;
-                    if (__instance.name.ToLower().Contains("sheetzcarwash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI1)
+                    if ((__instance.name.ToLower().Contains("gas station") || __instance.name.ToLower().Contains("gasstation")) && __instance.GetAI() is not GasStationAI)
                     {
-                        // sheetzcarwash
-                        vehicleWashAI1.m_allowSmallVehicles = true;
-                        vehicleWashAI1.m_allowLargeVehicles = false;
+                        var oldAI = __instance.GetComponent<PrefabAI>();
+                        UnityEngine.Object.DestroyImmediate(oldAI);
+                        var newAI = (PrefabAI)__instance.gameObject.AddComponent<GasStationAI>();
+                        PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
                     }
-                    else if (__instance.name.ToLower().Contains("Modocero_TopUpGasStationCarWash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI2)
+                    else if ((__instance.name.ToLower().Contains("gaspumps") || __instance.name.ToLower().Contains("gas pumps")) && __instance.GetAI() is not GasPumpAI)
                     {
-                        // Modocero_TopUpGasStationCarWash
-                        vehicleWashAI2.m_allowSmallVehicles = true;
-                        vehicleWashAI2.m_allowLargeVehicles = false;
+                        var oldAI = __instance.GetComponent<PrefabAI>();
+                        UnityEngine.Object.DestroyImmediate(oldAI);
+                        var newAI = (PrefabAI)__instance.gameObject.AddComponent<GasPumpAI>();
+                        PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
                     }
+                    else if ((__instance.name.ToLower().Contains("carwash") || __instance.name.ToLower().Contains("car wash")) && __instance.GetAI() is not VehicleWashBuildingAI)
+                    {
+                        var oldAI = __instance.GetComponent<PrefabAI>();
+                        UnityEngine.Object.DestroyImmediate(oldAI);
+                        var newAI = (PrefabAI)__instance.gameObject.AddComponent<VehicleWashBuildingAI>();
+                        PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
 
-
+                        if (__instance.name.ToLower().Contains("sheetzcarwash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI1)
+                        {
+                            // sheetzcarwash
+                            vehicleWashAI1.m_allowSmallVehicles = true;
+                            vehicleWashAI1.m_allowLargeVehicles = false;
+                        }
+                        else if (__instance.name.ToLower().Contains("Modocero_TopUpGasStationCarWash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI2)
+                        {
+                            // Modocero_TopUpGasStationCarWash
+                            vehicleWashAI2.m_allowSmallVehicles = true;
+                            vehicleWashAI2.m_allowLargeVehicles = false;
+                        }
+                    }
+                    //else if ((__instance.name.ToLower().Contains("repairshop") || __instance.name.ToLower().Contains("repair shop")) && __instance.GetAI() is not RepairStationAI)
+                    //{
+                    //    var oldAI = __instance.GetComponent<PrefabAI>();
+                    //    UnityEngine.Object.DestroyImmediate(oldAI);
+                    //    var newAI = (PrefabAI)__instance.gameObject.AddComponent<RepairStationAI>();
+                    //    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
+                    //
+                    //    __instance.m_placementStyle = ItemClass.Placement.Manual;
+                    //}
                 }
-                //else if ((__instance.name.ToLower().Contains("repairshop") || __instance.name.ToLower().Contains("repair shop")) && __instance.GetAI() is not RepairStationAI)
-                //{
-                //    var oldAI = __instance.GetComponent<PrefabAI>();
-                //    UnityEngine.Object.DestroyImmediate(oldAI);
-                //    var newAI = (PrefabAI)__instance.gameObject.AddComponent<RepairStationAI>();
-                //    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
-
-                //    __instance.m_placementStyle = ItemClass.Placement.Manual;
-                //}
             }
             catch (Exception e)
             {
