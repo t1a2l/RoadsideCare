@@ -261,8 +261,8 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                bool isOnWayToCareCenter = vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToGetWashed || vehicleNeeds.IsGoingToGetRepaired;
-                bool isBeingCaredFor = vehicleNeeds.IsRefueling || vehicleNeeds.IsBeingWashed || vehicleNeeds.IsBeingRepaired;
+                bool isOnWayToCareCenter = vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash || vehicleNeeds.IsGoingToTunnelWash || vehicleNeeds.IsGoingToGetRepaired;
+                bool isBeingCaredFor = vehicleNeeds.IsRefueling || vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash || vehicleNeeds.IsBeingRepaired;
                 if (isOnWayToCareCenter || isBeingCaredFor)
                 {
                     return false;
