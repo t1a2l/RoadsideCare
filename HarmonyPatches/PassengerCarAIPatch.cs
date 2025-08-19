@@ -213,6 +213,13 @@ namespace RoadsideCare.HarmonyPatches
                         VehicleNeedsManager.SetFuelAmount(vehicleID, newFuelAmount); // add fuel to car 
                         FuelVehicle(vehicleID, ref data, ref building, (int)newFuelAmount); // remove fuel for gas station or gas pump 
                     }
+
+                    if(vehicleNeeds.IsAtHandWash)
+                    {
+                        float dirtLevel = Mathf.Max(0, vehicleNeeds.DirtPercentage - vehicleNeeds.DirtPerFrame);
+
+                        VehicleNeedsManager.SetDirtPercentage(vehicleID, dirtLevel);
+                    }
                 }
 
                 if (vehicleNeeds.IsGoingToTunnelWash)
