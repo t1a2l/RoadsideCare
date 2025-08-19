@@ -10,7 +10,7 @@ namespace RoadsideCare.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 2;
+        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 1;
 
         public static void SaveData(FastList<byte> Data)
         {
