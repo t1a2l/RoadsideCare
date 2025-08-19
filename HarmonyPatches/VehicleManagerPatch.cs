@@ -3,6 +3,7 @@ using RoadsideCare.Managers;
 
 namespace RoadsideCare.HarmonyPatches
 {
+    [HarmonyPatch]
     public static class VehicleManagerPatch
     {
         [HarmonyPatch(typeof(VehicleManager), "ReleaseVehicle")]

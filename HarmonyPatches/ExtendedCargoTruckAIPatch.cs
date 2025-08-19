@@ -9,6 +9,7 @@ using UnityEngine;
 
 namespace RoadsideCare.HarmonyPatches
 {
+    [HarmonyPatch]
     public static class ExtendedCargoTruckAIPatch
     {
         const float FRAMES_PER_UNIT = 3.2f;
