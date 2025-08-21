@@ -14,6 +14,7 @@ namespace RoadsideCare.Managers
         {
             public ushort OriginalTargetBuilding;
             public uint OwnerId;
+            public float ServiceTimer;
 
             // fuel related
             public float FuelAmount;
@@ -88,7 +89,7 @@ namespace RoadsideCare.Managers
 
         public static bool ParkedVehicleNeedsExist(ushort parkedVehicleId) => ParkedVehiclesNeeds.ContainsKey(parkedVehicleId);
 
-        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float fuelAmount, float fuelCapacity,
+        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float serviceTimer, float fuelAmount, float fuelCapacity,
             float dirtPercentage, float wearPercenatge, float fuelPerFrame = 0, float dirtPerFrame = 0, float wearPerFrame = 0, bool isRefueling = false, 
             bool isGoingToRefuel = false, bool isAtTunnelWash = false, bool isAtTunnelWashExit = false, bool isGoingToTunnelWash = false, bool isAtHandWash = false, 
             bool isGoingToHandWash = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
@@ -97,6 +98,7 @@ namespace RoadsideCare.Managers
             {
                 OriginalTargetBuilding = originalTargetBuilding,
                 OwnerId = ownerId,
+                ServiceTimer = serviceTimer,
                 FuelAmount = fuelAmount,
                 FuelCapacity = fuelCapacity,
                 FuelPerFrame = fuelPerFrame,
@@ -219,6 +221,15 @@ namespace RoadsideCare.Managers
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
                 vehicleNeedsStruct.OriginalTargetBuilding = originalTargetBuilding;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetServiceTimer(ushort vehicleId, float serviceTimer)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.ServiceTimer = serviceTimer;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }

@@ -40,6 +40,9 @@ namespace RoadsideCare.Serializer
                 // Owner related
                 StorageData.WriteUInt32(kvp.Value.OwnerId, Data);
 
+                // Service Timer related
+                StorageData.WriteFloat(kvp.Value.ServiceTimer, Data);
+
                 // Fuel related
                 StorageData.WriteFloat(kvp.Value.FuelAmount, Data);
                 StorageData.WriteFloat(kvp.Value.FuelCapacity, Data);
@@ -123,6 +126,9 @@ namespace RoadsideCare.Serializer
                     // Owner related
                     uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
 
+                    // Service Timer related
+                    float serviceTimer = StorageData.ReadFloat(Data, ref iIndex);
+
                     // Fuel related
                     float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
 
@@ -165,7 +171,7 @@ namespace RoadsideCare.Serializer
 
                     if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
                     {
-                        VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, fuelAmount, fuelCapacity, dirtPercentage,
+                        VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, serviceTimer, fuelAmount, fuelCapacity, dirtPercentage,
                             wearPercentage, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isAtTunnelWash, isAtTunnelWashExit,
                             isGoingToTunnelWash, isAtHandWash, isGoingToHandWash, isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
                     }

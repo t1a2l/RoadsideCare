@@ -78,14 +78,14 @@ namespace RoadsideCare.HarmonyPatches
                 int randomFuelAmount = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
                 int randomDirtiness = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
                 int randomWear = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
-                VehicleNeedsManager.CreateVehicleNeeds(vehicleID, 0, 0, randomFuelAmount, passengerCarFuelCapacity, randomDirtiness, randomWear);
+                VehicleNeedsManager.CreateVehicleNeeds(vehicleID, 0, 0, 0, randomFuelAmount, passengerCarFuelCapacity, randomDirtiness, randomWear);
             }
             if (instance is ExtendedCargoTruckAI && !VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 int randomFuelAmount = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
                 int randomDirtiness = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
                 int randomWear = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
-                VehicleNeedsManager.CreateVehicleNeeds(vehicleID, 0, 0, randomFuelAmount, truckFuelCapacity, randomDirtiness, randomWear);
+                VehicleNeedsManager.CreateVehicleNeeds(vehicleID, 0, 0, 0, randomFuelAmount, truckFuelCapacity, randomDirtiness, randomWear);
             }
         }
 
