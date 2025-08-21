@@ -35,19 +35,6 @@ namespace RoadsideCare.HarmonyPatches
                         UnityEngine.Object.DestroyImmediate(oldAI);
                         var newAI = (PrefabAI)__instance.gameObject.AddComponent<VehicleWashBuildingAI>();
                         PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
-
-                        if (__instance.name.ToLower().Contains("sheetzcarwash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI1)
-                        {
-                            // sheetzcarwash
-                            vehicleWashAI1.m_allowSmallVehicles = true;
-                            vehicleWashAI1.m_allowLargeVehicles = false;
-                        }
-                        else if (__instance.name.ToLower().Contains("Modocero_TopUpGasStationCarWash") && __instance.GetAI() is VehicleWashBuildingAI vehicleWashAI2)
-                        {
-                            // Modocero_TopUpGasStationCarWash
-                            vehicleWashAI2.m_allowSmallVehicles = true;
-                            vehicleWashAI2.m_allowLargeVehicles = false;
-                        }
                     }
                     //else if ((__instance.name.ToLower().Contains("repairshop") || __instance.name.ToLower().Contains("repair shop")) && __instance.GetAI() is not RepairStationAI)
                     //{
