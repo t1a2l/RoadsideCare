@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Runtime.ConstrainedExecution;
+using System.Security.Policy;
 using CitiesHarmony.API;
 using ColossalFramework;
+using ColossalFramework.UI;
 using ICities;
 using RoadsideCare.AI;
 using RoadsideCare.HarmonyPatches;
 using RoadsideCare.Managers;
+using RoadsideCare.UI;
 using RoadsideCare.Utils;
 using UnityEngine;
 
@@ -18,6 +22,7 @@ namespace RoadsideCare
 
         public void OnEnabled()
         {
+            RoadsideCareSettings.Init();
             HarmonyHelper.DoOnHarmonyReady(() => PatchUtil.PatchAll());
         }
 
@@ -112,6 +117,43 @@ namespace RoadsideCare
             }
         }
 
+        private const float LeftMargin = 24f;
+
+        public void OnSettingsUI(UIHelperBase helper)
+        {
+            UIHelper Fueling_Time = helper.AddGroup("Fueling Time") as UIHelper;
+
+            var PassengerCarFuelingTimeInSeconds = UISliders.AddPlainSliderWithValue((UIComponent)Fueling_Time.self, LeftMargin, 0, "Passenger Car Fueling Time In Seconds", 1, 20, 1, RoadsideCareSettings.PassengerCarFuelingTimeInSeconds.value);
+
+            PassengerCarFuelingTimeInSeconds.eventValueChanged += (c, value) =>
+            {
+                RoadsideCareSettings.PassengerCarFuelingTimeInSeconds.value = value;
+            };
+
+            var CargoTruckFuelingTimeInSeconds = UISliders.AddPlainSliderWithValue((UIComponent)Fueling_Time.self, LeftMargin, 0, "Cargo Truck Fueling Time In Seconds", 1, 20, 1, RoadsideCareSettings.CargoTruckFuelingTimeInSeconds.value);
+
+            CargoTruckFuelingTimeInSeconds.eventValueChanged += (c, value) =>
+            {
+                RoadsideCareSettings.CargoTruckFuelingTimeInSeconds.value = value;
+            };
+
+            UIHelper HandWash_Time = helper.AddGroup("Hand Wash Time") as UIHelper;
+
+            var PassengerCarHandWashTimeInSeconds = UISliders.AddPlainSliderWithValue((UIComponent)HandWash_Time.self, LeftMargin, 0, "Passenger Car Hand Wash Time In Seconds", 1, 20, 1, RoadsideCareSettings.PassengerCarHandWashTimeInSeconds.value);
+
+            PassengerCarHandWashTimeInSeconds.eventValueChanged += (c, value) =>
+            {
+                RoadsideCareSettings.PassengerCarHandWashTimeInSeconds.value = value;
+            };
+
+            var CargoTruckHandWashTimeInSeconds = UISliders.AddPlainSliderWithValue((UIComponent)HandWash_Time.self, LeftMargin, 0, "Cargo Truck Hand Wash Time In Seconds", 1, 20, 1, RoadsideCareSettings.CargoTruckHandWashTimeInSeconds.value);
+
+            CargoTruckHandWashTimeInSeconds.eventValueChanged += (c, value) =>
+            {
+                RoadsideCareSettings.CargoTruckHandWashTimeInSeconds.value = value;
+            };
+
+        }
 
     }
 
