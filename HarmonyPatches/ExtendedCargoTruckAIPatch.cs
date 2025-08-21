@@ -66,8 +66,6 @@ namespace RoadsideCare.HarmonyPatches
                 return true;
             }
 
-            var originalBuildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].Info.GetAI();
-
             var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI();
 
             if (buildingAI is not GasStationAI && buildingAI is not GasPumpAI && buildingAI is not VehicleWashBuildingAI && buildingAI is not RepairStationAI)
@@ -77,21 +75,18 @@ namespace RoadsideCare.HarmonyPatches
 
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                Debug.LogWarning($"Vehicle {vehicleID}, target building: {targetBuilding}, data targetBuilding: {data.m_targetBuilding}.");
-                Debug.LogWarning($"Vehicle {vehicleID}, target building AI: {buildingAI}, data targetBuilding AI: {originalBuildingAI}.");
+                var original_targetBuilding = data.m_targetBuilding;
 
-                var original_targetBuilding = data.m_targetBuilding != 0 ? data.m_targetBuilding : targetBuilding;
                 VehicleNeedsManager.SetOriginalTargetBuilding(vehicleID, original_targetBuilding);
 
                 data.m_targetBuilding = targetBuilding;
 
                 var pathToRoadsideCareBuilding = CustomPathFindAI.CustomStartPathFind(vehicleID, ref data);
-                var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
                 if (!pathToRoadsideCareBuilding)
                 {
                     VehicleNeedsManager.ClearAtLocationMode(vehicleID);
                     VehicleNeedsManager.ClearGoingToMode(vehicleID);
-                    __instance.SetTarget(vehicleID, ref data, vehicleNeeds.OriginalTargetBuilding);
+                    __instance.SetTarget(vehicleID, ref data, original_targetBuilding);
                 }
                 return false;
             }

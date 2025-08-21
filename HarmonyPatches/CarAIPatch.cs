@@ -196,8 +196,7 @@ namespace RoadsideCare.HarmonyPatches
                     var humanAI = citizen.GetCitizenInfo(citizenId).GetAI() as HumanAI;
                     humanAI.StartMoving(citizenId, ref citizen, citizenInstance.m_targetBuilding, targetBuilding);
                 }
-
-                if (data.Info.GetAI() is ExtendedCargoTruckAI extendedCargoTruckAI)
+                else if (data.Info.GetAI() is ExtendedCargoTruckAI extendedCargoTruckAI)
                 {
                     extendedCargoTruckAI.SetTarget(vehicleID, ref data, targetBuilding);
                 }
