@@ -5,6 +5,7 @@ using MoreTransferReasons;
 using MoreTransferReasons.AI;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
+using RoadsideCare.Utils;
 using UnityEngine;
 
 namespace RoadsideCare.HarmonyPatches
@@ -100,39 +101,12 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                if (vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash)
+                if (vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash || vehicleNeeds.IsAtTunnelWash)
                 {
-                    var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                    var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                    if (distance < 80f && building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI || building.Info.GetAI() is VehicleWashBuildingAI)
-                    {
-                        VehicleNeedsManager.SetServiceTimer(vehicleID, 0); // Reset service timer
-                        data.m_blockCounter = 0;
-                        data.m_flags |= Vehicle.Flags.Stopped;
-                        data.m_flags |= Vehicle.Flags.WaitingPath;
-
-                        if (vehicleNeeds.IsGoingToRefuel)
-                        {
-                            VehicleNeedsManager.SetIsRefuelingMode(vehicleID); // sets IsGoingToRefuel to false and IsRefueling to true
-                        }
-                        if (vehicleNeeds.IsGoingToHandWash)
-                        {
-                            VehicleNeedsManager.SetIsAtHandWashMode(vehicleID); // sets IsGoingToHandWash to false and IsAtHandWash to true
-                        }
-                        __result = false;
-                        return false;
-                    }
-                }
-                if (vehicleNeeds.IsAtTunnelWash)
-                {
-                    data.m_blockCounter = 0;
-                    data.m_flags |= Vehicle.Flags.Stopped;
-                    data.m_flags |= Vehicle.Flags.WaitingPath;
-                    VehicleNeedsManager.SetIsAtTunnelWashExitMode(vehicleID);
+                    CarAIPatch.ArriveAtTarget(__instance, vehicleID, ref data);
                     __result = false;
                     return false;
                 }
-
             }
             return true;
         }
@@ -149,8 +123,6 @@ namespace RoadsideCare.HarmonyPatches
                 {
                     CarAIPatch.TakingCareOfVehicle(__instance, vehicleID, ref data);
                 }
-
-
             }
         }
 

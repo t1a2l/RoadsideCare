@@ -45,74 +45,112 @@ namespace RoadsideCare.HarmonyPatches
             return false;
         }
 
+        public static void ArriveAtTarget(CarAI instance, ushort vehicleID, ref Vehicle data)
+        {
+            var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
+            if (vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash)
+            {
+                var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
+                if (distance < 80f && building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI || building.Info.GetAI() is VehicleWashBuildingAI)
+                {
+                    VehicleNeedsManager.SetServiceTimer(vehicleID, 0); // Reset service timer
+                    data.m_blockCounter = 0;
+                    data.m_flags |= Vehicle.Flags.Stopped;
+                    data.m_flags |= Vehicle.Flags.WaitingPath;
+
+                    if (vehicleNeeds.IsGoingToRefuel)
+                    {
+                        float fuelingInSeconds = 0;
+
+                        if(data.Info.GetAI() is PassengerCarAI)
+                        {
+                            fuelingInSeconds = RoadsideCareSettings.PassengerCarFuelingTimeInSeconds;
+                        }
+                        if (data.Info.GetAI() is ExtendedCargoTruckAI)
+                        {
+                            fuelingInSeconds = RoadsideCareSettings.CargoTruckFuelingTimeInSeconds;
+                        }
+
+                        var fuel_steps = 4 * fuelingInSeconds;
+
+                        float initialFuel = vehicleNeeds.FuelAmount;
+
+                        // Calculates the total fuel that still needs to be added to reach full capacity
+                        float fuelNeeded = vehicleNeeds.FuelCapacity - initialFuel;
+
+                        float delta = fuelNeeded / fuel_steps;
+
+                        VehicleNeedsManager.SetFuelPerFrame(vehicleID, delta); // Set the fuel per frame to be added during refueling
+
+                        VehicleNeedsManager.SetIsRefuelingMode(vehicleID); // sets IsGoingToRefuel to false and IsRefueling to true
+                    }
+                    if (vehicleNeeds.IsGoingToHandWash)
+                    {
+                        float handWashInSeconds = 0;
+
+                        if (data.Info.GetAI() is PassengerCarAI)
+                        {
+                            handWashInSeconds = RoadsideCareSettings.PassengerCarHandWashTimeInSeconds;
+                        }
+                        if (data.Info.GetAI() is ExtendedCargoTruckAI)
+                        {
+                            handWashInSeconds = RoadsideCareSettings.CargoTruckHandWashTimeInSeconds;
+                        }
+
+                        var handWash_steps = 4 * handWashInSeconds;
+
+                        // Calculates the total dirt that needs to be removed
+                        float dirtToRemove = vehicleNeeds.DirtPercentage;
+
+                        float delta = dirtToRemove / handWash_steps;
+
+                        VehicleNeedsManager.SetDirtPerFrame(vehicleID, delta); // Set the dirt per frame to be removed during hand wash
+
+                        VehicleNeedsManager.SetIsAtHandWashMode(vehicleID); // sets IsGoingToHandWash to false and IsAtHandWash to true
+                    }
+                }
+            }
+            if (vehicleNeeds.IsAtTunnelWash)
+            {
+                data.m_blockCounter = 0;
+                data.m_flags |= Vehicle.Flags.Stopped;
+                data.m_flags |= Vehicle.Flags.WaitingPath;
+                VehicleNeedsManager.SetIsAtTunnelWashExitMode(vehicleID);
+            }
+        }
+
         public static void TakingCareOfVehicle(CarAI instance, ushort vehicleID, ref Vehicle data)
         {
             var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
 
-            // Get the time passed since the last frame.
-            float deltaTime = SimulationManager.instance.m_simulationTimeDelta;
+            var serviceTimer = vehicleNeeds.ServiceTimer + 1; // Increment the service timer
 
-            // Add the elapsed time to the service timer
-            float serviceTimer = vehicleNeeds.ServiceTimer + deltaTime;
-
-            // Update the manager with the new service timer.
             VehicleNeedsManager.SetServiceTimer(vehicleID, serviceTimer);
 
             bool TunnelWashComplete = false;
 
             if (vehicleNeeds.IsRefueling)
             {
-                // Store the fuel amount when the service began to act as a constant starting point
-                // A temporary solution without changing the struct
-                float initialFuel = vehicleNeeds.FuelAmount;
+                var newAmount = vehicleNeeds.FuelAmount + vehicleNeeds.FuelPerFrame;
 
-                // Calculates the total fuel that still needs to be added to reach full capacity
-                float fuelNeeded = vehicleNeeds.FuelCapacity - initialFuel;
+                VehicleNeedsManager.SetFuelAmount(vehicleID, newAmount);
 
-                // Calculate the target fuel amount based on the percentage of time that has passed,
-                // starting from the initial fuel amount.
-                float targetFuelAmount = initialFuel + (serviceTimer / RoadsideCareSettings.PassengerCarFuelingTimeInSeconds) * fuelNeeded;
-
-                // Update the vehicle's fuel amount, capping it at the maximum capacity.
-                vehicleNeeds.FuelAmount = Mathf.Min(vehicleNeeds.FuelCapacity, targetFuelAmount);
-
-                // Update the manager with the new fuel amount.
-                VehicleNeedsManager.SetFuelAmount(vehicleID, vehicleNeeds.FuelAmount);
-
-                // Calculates the fuel refill rate in units of "fuel per second".
-                float fuelPerSecond = fuelNeeded / RoadsideCareSettings.PassengerCarFuelingTimeInSeconds;
-
-                // represents the value of the ServiceTimer at the start of the current frame
-                float nextServiceTimer = serviceTimer - deltaTime;
-
-                // Total fuel amount that the vehicle had at the beginning of the current frame
-                // This calculation now uses the initial fuel amount and the amount added up to the previous frame
-                float frameTotalFuelAmount = initialFuel + fuelPerSecond * nextServiceTimer;
-
-                // Calculate the amount of fuel to remove from the gas station buffer this frame.
-                float fuelToRemoveThisFrame = targetFuelAmount - (serviceTimer > 0 ? frameTotalFuelAmount : 0);
-
-                // Update the gas station's fuel buffer
-                ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                ModifyGasStationFuelAmount(vehicleID, ref data, ref building, (int)fuelToRemoveThisFrame);
+                if(serviceTimer >= 4 && serviceTimer % 4 == 0)
+                {
+                    var fuelAmount = 4 * vehicleNeeds.FuelPerFrame;
+                    // Update the gas station's fuel buffer
+                    ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                    ModifyGasStationFuelAmount(vehicleID, ref data, ref building, (int)fuelAmount);
+                }
             }
 
             if (vehicleNeeds.IsAtHandWash)
             {
-                // Calculates the total dirt that needs to be removed
-                float initialDirt = vehicleNeeds.DirtPercentage;
-
-                // Calculates the total dirt that still needs to be removed to reach a clean state
-                float dirtToRemove = 100 - initialDirt;
-
-                // Calculate the target dirt percentage based on the percentage of time remaining.
-                float targetDirtPercentage = dirtToRemove - (vehicleNeeds.ServiceTimer / RoadsideCareSettings.PassengerCarHandWashTimeInSeconds) * dirtToRemove;
-
-                // Update the dirt level, ensuring it doesn't go below zero.
-                float dirt_level = Mathf.Max(0, targetDirtPercentage);
+                var newAmount = vehicleNeeds.DirtPercentage - vehicleNeeds.DirtPerFrame;
 
                 // Update the manager with the new dirt percentage.
-                VehicleNeedsManager.SetDirtPercentage(vehicleID, dirt_level);
+                VehicleNeedsManager.SetDirtPercentage(vehicleID, newAmount);
             }
 
             if (vehicleNeeds.IsGoingToTunnelWash)
@@ -169,8 +207,10 @@ namespace RoadsideCare.HarmonyPatches
             data.m_flags |= Vehicle.Flags.WaitingPath;
             data.m_blockCounter = 0;
 
-            var FuelingComplete = vehicleNeeds.IsRefueling && serviceTimer >= RoadsideCareSettings.PassengerCarFuelingTimeInSeconds;
-            var HandWashComplete = vehicleNeeds.IsAtHandWash && serviceTimer >= RoadsideCareSettings.PassengerCarHandWashTimeInSeconds;
+            vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
+
+            var FuelingComplete = vehicleNeeds.IsRefueling && vehicleNeeds.FuelAmount >= vehicleNeeds.FuelCapacity;
+            var HandWashComplete = vehicleNeeds.IsAtHandWash && vehicleNeeds.DirtPercentage <= 0;
 
             if (FuelingComplete || HandWashComplete || TunnelWashComplete)
             {
@@ -188,7 +228,7 @@ namespace RoadsideCare.HarmonyPatches
                     VehicleNeedsManager.SetFuelAmount(vehicleID, vehicleNeeds.FuelCapacity);
                 }
 
-                if(data.Info.GetAI() is PassengerCarAI)
+                if (data.Info.GetAI() is PassengerCarAI)
                 {
                     var citizenId = instance.GetOwnerID(vehicleID, ref data).Citizen;
                     ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
