@@ -228,6 +228,12 @@ namespace RoadsideCare.HarmonyPatches
                     VehicleNeedsManager.SetFuelAmount(vehicleID, vehicleNeeds.FuelCapacity);
                 }
 
+                if (vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash)
+                {
+                    // Ensure dirt is exactly at 0 after cleaning is complete
+                    VehicleNeedsManager.SetDirtPercentage(vehicleID, 0);
+                }
+
                 if (data.Info.GetAI() is PassengerCarAI)
                 {
                     var citizenId = instance.GetOwnerID(vehicleID, ref data).Citizen;
