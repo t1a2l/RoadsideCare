@@ -30,6 +30,7 @@ namespace RoadsideCare.AI
 
                     if (info.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
                     {
+                        VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
                         Randomizer randomizer2 = new(vehicleID);
                         info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
                         return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
@@ -77,6 +78,7 @@ namespace RoadsideCare.AI
 
                 if (info2.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
                 {
+                    VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
                     Randomizer randomizer2 = new(vehicleID);
                     info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
                     return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
@@ -156,7 +158,19 @@ namespace RoadsideCare.AI
             if (laneId == 0) return false;
 
             // Get lane position for pathfinding target
-            targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0.5f); // middle of lane
+            bool fuelPositionChoice = Singleton<SimulationManager>.instance.m_randomizer.Int32(2U) == 0;
+
+            float fuelPosition;
+            if (fuelPositionChoice)
+            {
+                fuelPosition = 0.75f;
+            }
+            else
+            {
+                fuelPosition = 0.25f;
+            }
+
+            targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(fuelPosition); // middle of lane
             VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
             return true;
         }
@@ -241,7 +255,7 @@ namespace RoadsideCare.AI
 
             // Get lane position for pathfinding target
             targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(1f); // end of lane
-            VehicleNeedsManager.SetIsGoingToHandWashMode(vehicleID);
+            VehicleNeedsManager.SetIsGoingToTunnelWashMode(vehicleID);
             return true;
         }
 
