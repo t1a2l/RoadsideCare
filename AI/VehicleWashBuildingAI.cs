@@ -206,8 +206,9 @@ namespace RoadsideCare.AI
                     offer.Amount = 1;
                     offer.Active = false;
                     Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource, offer);
-                    RefreshVehicleWashPoints(buildingID);
                 }
+                RefreshVehicleWashPoints(buildingID);
+                RefreshVehicleWashLanes(buildingID);
             }
         }
 
@@ -257,6 +258,37 @@ namespace RoadsideCare.AI
             {
                 var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                 var toRemove = new List<ushort>();
+                foreach (var segmentId in vehicleWashBuilding.VehicleWashPoints)
+                {
+                    if (segmentId == 0 || !NetManager.instance.m_segments.m_buffer[segmentId].m_flags.IsFlagSet(NetSegment.Flags.Created))
+                    {
+                        toRemove.Add(segmentId);
+                        continue;
+                    }
+
+                    ushort infoIndex = NetManager.instance.m_segments.m_buffer[segmentId].m_infoIndex;
+                    NetInfo info = PrefabCollection<NetInfo>.GetPrefab(infoIndex);
+                    if (info.m_netAI is not VehicleWashPointAI && info.m_netAI is not VehicleWashPointSmallAI && info.m_netAI is not VehicleWashPointLargeAI)
+                    {
+                        toRemove.Add(segmentId);
+                    }
+                }
+
+                foreach (var seg in toRemove)
+                {
+                    vehicleWashBuilding.VehicleWashPoints.Remove(seg);
+                }
+
+                VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashLanes);
+            }
+        }
+
+        public void RefreshVehicleWashLanes(ushort buildingID)
+        {
+            if (VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
+            {
+                var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
+                var toRemove = new List<ushort>();
                 foreach (var segmentId in vehicleWashBuilding.VehicleWashLanes)
                 {
                     if (segmentId == 0 || !NetManager.instance.m_segments.m_buffer[segmentId].m_flags.IsFlagSet(NetSegment.Flags.Created))
@@ -267,7 +299,7 @@ namespace RoadsideCare.AI
 
                     ushort infoIndex = NetManager.instance.m_segments.m_buffer[segmentId].m_infoIndex;
                     NetInfo info = PrefabCollection<NetInfo>.GetPrefab(infoIndex);
-                    if (info.m_netAI is not VehicleWashLaneAI)
+                    if (info.m_netAI is not VehicleWashLaneAI && info.m_netAI is not VehicleWashLaneSmallAI && info.m_netAI is not VehicleWashLaneLargeAI)
                     {
                         toRemove.Add(segmentId);
                     }
