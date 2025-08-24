@@ -43,12 +43,12 @@ namespace RoadsideCare.HarmonyPatches
                         }
                     }
                 }
-                if (vehicleNeeds.FuelAmount > 0 && !vehicleNeeds.IsRefueling && (vehicleData.m_flags & Vehicle.Flags.Stopped) == 0)
+                if (vehicleNeeds.FuelAmount > 0 && !vehicleNeeds.IsRefueling && !vehicleNeeds.IsAtHandWash && !vehicleNeeds.IsBeingRepaired)
                 {
                     var newAmount = vehicleNeeds.FuelAmount - 0.01f;
                     VehicleNeedsManager.SetFuelAmount(vehicleID, newAmount);
                 }
-                if (vehicleNeeds.DirtPercentage < 100 && !(vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash))
+                if (vehicleNeeds.DirtPercentage < 100 && !vehicleNeeds.IsAtHandWash && !vehicleNeeds.IsAtTunnelWash)
                 {
                     var newDirtPercentage = vehicleNeeds.DirtPercentage + 0.01f;
                     VehicleNeedsManager.SetDirtPercentage(vehicleID, newDirtPercentage);
