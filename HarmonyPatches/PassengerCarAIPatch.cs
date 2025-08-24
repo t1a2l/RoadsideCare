@@ -4,7 +4,6 @@ using ColossalFramework.Globalization;
 using HarmonyLib;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
-using RoadsideCare.Utils;
 using UnityEngine;
 
 namespace RoadsideCare.HarmonyPatches
@@ -169,6 +168,21 @@ namespace RoadsideCare.HarmonyPatches
                 if (vehicleNeeds.IsRefueling || vehicleNeeds.IsAtHandWash || vehicleNeeds.IsGoingToTunnelWash || vehicleNeeds.IsAtTunnelWash)
                 {
                     CarAIPatch.TakingCareOfVehicle(__instance, vehicleID, ref data);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(PassengerCarAI), "UpdateParkedVehicle")]
+        [HarmonyPostfix]
+        public static void UpdateParkedVehicle(ushort parkedID, ref VehicleParked parkedData)
+        {
+            if (VehicleNeedsManager.ParkedVehicleNeedsExist(parkedID))
+            {
+                var vehicleNeeds = VehicleNeedsManager.GetParkedVehicleNeeds(parkedID);
+                if (vehicleNeeds.DirtPercentage < 100)
+                {
+                    var newDirtPercentage = vehicleNeeds.DirtPercentage + 0.01f;
+                    VehicleNeedsManager.SetParkedDirtPercentage(parkedID, newDirtPercentage);
                 }
             }
         }
