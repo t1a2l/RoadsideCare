@@ -302,6 +302,15 @@ namespace RoadsideCare.Managers
             }
         }
 
+        public static void SetParkedDirtPercentage(ushort parkedId, float dirtPercentage)
+        {
+            if (ParkedVehiclesNeeds.TryGetValue(parkedId, out var parkedVehicleNeedsStruct))
+            {
+                parkedVehicleNeedsStruct.DirtPercentage = dirtPercentage;
+                ParkedVehiclesNeeds[parkedId] = parkedVehicleNeedsStruct;
+            }
+        }
+
         public static void SetDirtPerFrame(ushort vehicleId, float dirtPerFrame)
         {
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
