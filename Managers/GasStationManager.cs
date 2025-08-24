@@ -50,7 +50,6 @@ namespace RoadsideCare.Managers
             }
         }
 
-
         public static void SetFuelAmount(ushort buildingId, int fuelAmount)
         {
             if (GasStationBuildings.TryGetValue(buildingId, out var gasStationStruct))
@@ -71,8 +70,12 @@ namespace RoadsideCare.Managers
 
         public static bool SegmentIdBelongsToAGasStation(ushort segmentID)
         {
-            return GasStationBuildings.Values.Any(s => s.FuelPoints.Any(v => v == segmentID));
+            return GasStationBuildings.Any(s => s.Value.FuelPoints.Any(v => v == segmentID));
         }
 
+        public static ushort GetSegmentIdGasStation(ushort segmentID)
+        {
+            return GasStationBuildings.FirstOrDefault(s => s.Value.FuelPoints.Any(v => v == segmentID)).Key;
+        }
     }
 }

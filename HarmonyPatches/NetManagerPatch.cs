@@ -15,54 +15,62 @@ namespace RoadsideCare.HarmonyPatches
         [HarmonyPostfix]
         public static void CreateSegment(ref ushort segment, ref Randomizer randomizer, NetInfo info, TreeInfo treeInfo, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, uint buildIndex, uint modifiedIndex, bool invert)
         {
-            UpdateRoadCareBuildingsNearNewSegment(segment);
+            CreateOrUpdateSegmentToARoadCareBuilding(segment);
         }
 
         [HarmonyPatch(typeof(NetManager), "ReleaseSegment")]
         [HarmonyPostfix]
         public static void ReleaseSegment(ushort segment, bool keepNodes)
         {
-            UpdateRoadCareBuildingsNearRemovedSegment(segment);
+            RemoveSegmentFromRoadCareBuilding(segment);
         }
 
-        private static void UpdateRoadCareBuildingsNearNewSegment(ushort segmentID)
+        private static void CreateOrUpdateSegmentToARoadCareBuilding(ushort segmentID)
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
 
-            if(segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not FuelPointSmallAI && segment.Info.m_netAI is not FuelPointLargeAI && 
-                segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashLaneSmallAI && segment.Info.m_netAI is not VehicleWashLaneLargeAI &&
-                segment.Info.m_netAI is not VehicleWashPointAI && segment.Info.m_netAI is not VehicleWashPointSmallAI && segment.Info.m_netAI is not VehicleWashPointLargeAI)
+            if (segment.Info.m_netAI is FuelPointAI && segment.Info.m_netAI is FuelPointSmallAI && segment.Info.m_netAI is FuelPointLargeAI)
             {
+                var gasStationBuildings = GasStationManager.GetGasStationBuildings();
+
+                foreach (ushort buildingID in gasStationBuildings.Keys)
+                {
+                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    {
+                        var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                        gasStation.FuelPoints.Add(segmentID);
+                        GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
+                        break;
+                    }
+                }
+
                 return;
             }
 
-            for (ushort buildingID = 0; buildingID < BuildingManager.MAX_BUILDING_COUNT; buildingID++)
+            if (segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI)
             {
-                ref Building b = ref BuildingManager.instance.m_buildings.m_buffer[buildingID];
-                if ((b.m_flags & Building.Flags.Created) == 0)
-                    continue;
+                var vehicleWashBuildings = VehicleWashBuildingManager.GetVehicleWashBuildings();
 
-                if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID) && 
-                    (segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI)
-                    && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                foreach (ushort buildingID in vehicleWashBuildings.Keys)
                 {
-                    var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
-                    gasStation.FuelPoints.Add(segmentID);
-                    GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
-                    break;
-                }
-                else if (b.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
-                {
-                    if ((segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI) 
-                        && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         vehicleWashBuilding.VehicleWashLanes.Add(segmentID);
                         VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
                         break;
                     }
-                    else if ((segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI) 
-                        && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                }
+                return;
+            }
+
+            if (segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI)
+            {
+                var vehicleWashBuildings = VehicleWashBuildingManager.GetVehicleWashBuildings();
+
+                foreach (ushort buildingID in vehicleWashBuildings.Keys)
+                {
+                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         vehicleWashBuilding.VehicleWashPoints.Add(segmentID);
@@ -70,63 +78,44 @@ namespace RoadsideCare.HarmonyPatches
                         break;
                     }
                 }
+                return;
             }
         }
 
-        private static void UpdateRoadCareBuildingsNearRemovedSegment(ushort segmentID)
+        private static void RemoveSegmentFromRoadCareBuilding(ushort segmentID)
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
 
-            if (segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not FuelPointSmallAI && segment.Info.m_netAI is not FuelPointLargeAI &&
-                segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashLaneSmallAI && segment.Info.m_netAI is not VehicleWashLaneLargeAI &&
-                segment.Info.m_netAI is not VehicleWashPointAI && segment.Info.m_netAI is not VehicleWashPointSmallAI && segment.Info.m_netAI is not VehicleWashPointLargeAI)
+            if (segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI)
             {
-                return;
-            }
-
-            if ((segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI) 
-                && !GasStationManager.SegmentIdBelongsToAGasStation(segmentID))
-            {
-                return;
-            }
-
-            if ((segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI 
-                || segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI) 
-                && !VehicleWashBuildingManager.SegmentIdBelongsToAVehicleWashBuilding(segmentID))
-            {
-                return;
-            }
-
-            for (ushort buildingID = 0; buildingID < BuildingManager.MAX_BUILDING_COUNT; buildingID++)
-            {
-                ref Building b = ref BuildingManager.instance.m_buildings.m_buffer[buildingID];
-                if ((b.m_flags & Building.Flags.Created) == 0)
-                    continue;
-
-                if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID) 
-                    && (segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI))
+                if(GasStationManager.SegmentIdBelongsToAGasStation(segmentID))
                 {
+                    var buildingID = GasStationManager.GetSegmentIdGasStation(segmentID);
                     var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                     gasStation.FuelPoints.Remove(segmentID);
                     GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
-                    break;
                 }
-                else if (b.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
+            }
+
+            if (segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI)
+            {
+                if (VehicleWashBuildingManager.SegmentIdBelongsToAVehicleWashBuildingWithLanes(segmentID))
                 {
-                    if (segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI)
-                    {
-                        var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
-                        vehicleWashBuilding.VehicleWashLanes.Remove(segmentID);
-                        VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
-                        break;
-                    }
-                    else if (segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI)
-                    {
-                        var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
-                        vehicleWashBuilding.VehicleWashPoints.Remove(segmentID);
-                        VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
-                        break;
-                    }
+                    var buildingID = VehicleWashBuildingManager.GetSegmentIdVehicleWashBuildingByLane(segmentID);
+                    var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
+                    vehicleWashBuilding.VehicleWashLanes.Remove(segmentID);
+                    VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
+                }
+            }
+
+            if (segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI) 
+            {
+                if (VehicleWashBuildingManager.SegmentIdBelongsToAVehicleWashBuildingWithPoints(segmentID))
+                {
+                    var buildingID = VehicleWashBuildingManager.GetSegmentIdVehicleWashBuildingByPoint(segmentID);
+                    var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
+                    vehicleWashBuilding.VehicleWashPoints.Remove(segmentID);
+                    VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
                 }
             }
         }

@@ -68,10 +68,24 @@ namespace RoadsideCare.Managers
             }
         }
 
-        public static bool SegmentIdBelongsToAVehicleWashBuilding(ushort segmentID)
+        public static bool SegmentIdBelongsToAVehicleWashBuildingWithPoints(ushort segmentID)
         {
-            return VehicleWashBuildings.Values.Any(s => s.VehicleWashLanes.Any(v => v == segmentID) || s.VehicleWashPoints.Any(v => v == segmentID));
+            return VehicleWashBuildings.Any(s => s.Value.VehicleWashPoints.Any(v => v == segmentID));
         }
 
+        public static bool SegmentIdBelongsToAVehicleWashBuildingWithLanes(ushort segmentID)
+        {
+            return VehicleWashBuildings.Any(s => s.Value.VehicleWashLanes.Any(v => v == segmentID));
+        }
+
+        public static ushort GetSegmentIdVehicleWashBuildingByPoint(ushort segmentID)
+        {
+            return VehicleWashBuildings.FirstOrDefault(s => s.Value.VehicleWashPoints.Any(v => v == segmentID)).Key;
+        }
+
+        public static ushort GetSegmentIdVehicleWashBuildingByLane(ushort segmentID)
+        {
+            return VehicleWashBuildings.FirstOrDefault(s => s.Value.VehicleWashLanes.Any(v => v == segmentID)).Key;
+        }
     }
 }
