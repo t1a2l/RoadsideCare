@@ -167,7 +167,7 @@ namespace RoadsideCare.AI
             }
             else
             {
-                fuelPosition = 0.25f;
+                fuelPosition = 0.35f;
             }
 
             targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(fuelPosition); // middle of lane
