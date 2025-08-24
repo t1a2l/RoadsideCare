@@ -29,7 +29,8 @@ namespace RoadsideCare.HarmonyPatches
                         var newAI = (PrefabAI)__instance.gameObject.AddComponent<GasPumpAI>();
                         PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
                     }
-                    else if ((__instance.name.ToLower().Contains("carwash") || __instance.name.ToLower().Contains("car wash") || __instance.name.ToLower().Contains("truckwash")) && __instance.GetAI() is not VehicleWashBuildingAI)
+                    else if ((__instance.name.ToLower().Contains("carwash") || __instance.name.ToLower().Contains("car wash") || __instance.name.ToLower().Contains("truckwash") 
+                        || __instance.name.ToLower().Contains("truck wash")) && __instance.GetAI() is not VehicleWashBuildingAI)
                     {
                         var oldAI = __instance.GetComponent<PrefabAI>();
                         UnityEngine.Object.DestroyImmediate(oldAI);
