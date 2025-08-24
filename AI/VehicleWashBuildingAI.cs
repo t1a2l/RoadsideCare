@@ -266,9 +266,9 @@ namespace RoadsideCare.AI
                         continue;
                     }
 
-                    ushort infoIndex = NetManager.instance.m_segments.m_buffer[segmentId].m_infoIndex;
-                    NetInfo info = PrefabCollection<NetInfo>.GetPrefab(infoIndex);
-                    if (info.m_netAI is not VehicleWashPointAI && info.m_netAI is not VehicleWashPointSmallAI && info.m_netAI is not VehicleWashPointLargeAI)
+                    var segment = NetManager.instance.m_segments.m_buffer[segmentId];
+
+                    if (segment.Info.m_netAI is not VehicleWashPointAI && segment.Info.m_netAI is not VehicleWashPointSmallAI && segment.Info.m_netAI is not VehicleWashPointLargeAI)
                     {
                         toRemove.Add(segmentId);
                     }
@@ -279,7 +279,7 @@ namespace RoadsideCare.AI
                     vehicleWashBuilding.VehicleWashPoints.Remove(seg);
                 }
 
-                VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashLanes);
+                VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
             }
         }
 
@@ -297,9 +297,9 @@ namespace RoadsideCare.AI
                         continue;
                     }
 
-                    ushort infoIndex = NetManager.instance.m_segments.m_buffer[segmentId].m_infoIndex;
-                    NetInfo info = PrefabCollection<NetInfo>.GetPrefab(infoIndex);
-                    if (info.m_netAI is not VehicleWashLaneAI && info.m_netAI is not VehicleWashLaneSmallAI && info.m_netAI is not VehicleWashLaneLargeAI)
+                    var segment = NetManager.instance.m_segments.m_buffer[segmentId];
+
+                    if (segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashLaneSmallAI && segment.Info.m_netAI is not VehicleWashLaneLargeAI)
                     {
                         toRemove.Add(segmentId);
                     }
