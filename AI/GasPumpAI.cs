@@ -361,7 +361,7 @@ namespace RoadsideCare.AI
 
                     ushort infoIndex = NetManager.instance.m_segments.m_buffer[segmentId].m_infoIndex;
                     NetInfo info = PrefabCollection<NetInfo>.GetPrefab(infoIndex);
-                    if (info.m_netAI is not FuelPointAI)
+                    if (info.m_netAI is not FuelPointAI && info.m_netAI is not FuelPointSmallAI && info.m_netAI is not FuelPointLargeAI)
                     {
                         toRemove.Add(segmentId);
                     }

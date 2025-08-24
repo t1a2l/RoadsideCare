@@ -22,21 +22,11 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Noise Radius", "Pollution")]
         public float m_noiseRadius = 50f;
 
-        [CustomizableProperty("Allow Small Vehicles")]
-        public bool m_allowSmallVehicles = true;
-
-        [CustomizableProperty("Allow Large Vehicles")]
-        public bool m_allowLargeVehicles = true;
-
         readonly ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.PetroleumProducts;
 
-        readonly ExtendedTransferManager.TransferReason m_outgoingResource1 = ExtendedTransferManager.TransferReason.VehicleSmallMinorRepair;
+        readonly ExtendedTransferManager.TransferReason m_outgoingResource1 = ExtendedTransferManager.TransferReason.VehicleMinorRepair;
 
-        readonly ExtendedTransferManager.TransferReason m_outgoingResource2 = ExtendedTransferManager.TransferReason.VehicleSmallMajorRepair;
-
-        readonly ExtendedTransferManager.TransferReason m_outgoingResource3 = ExtendedTransferManager.TransferReason.VehicleLargeMinorRepair;
-
-        readonly ExtendedTransferManager.TransferReason m_outgoingResource4 = ExtendedTransferManager.TransferReason.VehicleLargeMajorRepair;
+        readonly ExtendedTransferManager.TransferReason m_outgoingResource2 = ExtendedTransferManager.TransferReason.VehicleMajorRepair;
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
         {
@@ -108,8 +98,6 @@ namespace RoadsideCare.AI
             ExtendedTransferManager.TransferReason incomingResource = m_incomingResource;
             ExtendedTransferManager.TransferReason outgoingResource1 = m_outgoingResource1;
             ExtendedTransferManager.TransferReason outgoingResource2 = m_outgoingResource2;
-            ExtendedTransferManager.TransferReason outgoingResource3 = m_outgoingResource3;
-            ExtendedTransferManager.TransferReason outgoingResource4 = m_outgoingResource4;
             if (incomingResource != ExtendedTransferManager.TransferReason.None)
             {
                 int count = 0;
@@ -119,7 +107,7 @@ namespace RoadsideCare.AI
                 ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, incomingResource, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, incomingResource.ToString(), data.m_customBuffer1, cargo);
             }
-            if (m_allowSmallVehicles && outgoingResource1 != ExtendedTransferManager.TransferReason.None)
+            if (outgoingResource1 != ExtendedTransferManager.TransferReason.None)
             {
                 int count = 0;
                 int cargo = 0;
@@ -128,7 +116,7 @@ namespace RoadsideCare.AI
                 ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource1, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, outgoingResource1.ToString(), cargo);
             }
-            if (m_allowSmallVehicles && outgoingResource2 != ExtendedTransferManager.TransferReason.None)
+            if (outgoingResource2 != ExtendedTransferManager.TransferReason.None)
             {
                 int count = 0;
                 int cargo = 0;
@@ -136,24 +124,6 @@ namespace RoadsideCare.AI
                 int outside = 0;
                 ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource2, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2}", text, outgoingResource2.ToString(), cargo);
-            }
-            if (m_allowLargeVehicles && outgoingResource3 != ExtendedTransferManager.TransferReason.None)
-            {
-                int count = 0;
-                int cargo = 0;
-                int capacity = 0;
-                int outside = 0;
-                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource3, ref count, ref cargo, ref capacity, ref outside);
-                text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, outgoingResource3.ToString(), cargo);
-            }
-            if (m_allowLargeVehicles && outgoingResource4 != ExtendedTransferManager.TransferReason.None)
-            {
-                int count = 0;
-                int cargo = 0;
-                int capacity = 0;
-                int outside = 0;
-                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource4, ref count, ref cargo, ref capacity, ref outside);
-                text = StringUtils.SafeFormat("{0}\n{1}: {2}", text, outgoingResource4.ToString(), cargo);
             }
             return text;
         }
@@ -242,19 +212,11 @@ namespace RoadsideCare.AI
             {
                 Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer(m_incomingResource, offer);
             }
-            if (m_allowSmallVehicles && m_outgoingResource1 != ExtendedTransferManager.TransferReason.None)
+            if (m_outgoingResource1 != ExtendedTransferManager.TransferReason.None)
             {
                 Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource1, offer);
             }
-            if (m_allowSmallVehicles && m_outgoingResource2 != ExtendedTransferManager.TransferReason.None)
-            {
-                Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource2, offer);
-            }
-            if (m_allowLargeVehicles && m_outgoingResource3 != ExtendedTransferManager.TransferReason.None)
-            {
-                Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource1, offer);
-            }
-            if (m_allowLargeVehicles && m_outgoingResource4 != ExtendedTransferManager.TransferReason.None)
+            if (m_outgoingResource2 != ExtendedTransferManager.TransferReason.None)
             {
                 Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource2, offer);
             }
@@ -290,38 +252,19 @@ namespace RoadsideCare.AI
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
                 if (buildingData.m_fireIntensity == 0)
                 {
-                    if (m_allowSmallVehicles)
-                    {
-                        ExtendedTransferManager.Offer offer1 = default;
-                        offer1.Building = buildingID;
-                        offer1.Position = buildingData.m_position;
-                        offer1.Amount = 1;
-                        offer1.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource1, offer1);
+                    ExtendedTransferManager.Offer offer1 = default;
+                    offer1.Building = buildingID;
+                    offer1.Position = buildingData.m_position;
+                    offer1.Amount = 1;
+                    offer1.Active = false;
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource1, offer1);
 
-                        ExtendedTransferManager.Offer offer2 = default;
-                        offer2.Building = buildingID;
-                        offer2.Position = buildingData.m_position;
-                        offer2.Amount = 1;
-                        offer2.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer2);
-                    }
-                    if (m_allowLargeVehicles)
-                    {
-                        ExtendedTransferManager.Offer offer3 = default;
-                        offer3.Building = buildingID;
-                        offer3.Position = buildingData.m_position;
-                        offer3.Amount = 1;
-                        offer3.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource3, offer3);
-
-                        ExtendedTransferManager.Offer offer4 = default;
-                        offer4.Building = buildingID;
-                        offer4.Position = buildingData.m_position;
-                        offer4.Amount = 1;
-                        offer4.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource4, offer4);
-                    }
+                    ExtendedTransferManager.Offer offer2 = default;
+                    offer2.Building = buildingID;
+                    offer2.Position = buildingData.m_position;
+                    offer2.Amount = 1;
+                    offer2.Active = false;
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer2);
                 }
             }
         }

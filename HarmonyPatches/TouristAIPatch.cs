@@ -55,9 +55,9 @@ namespace RoadsideCare.HarmonyPatches
             {
                 case ExtendedTransferManager.TransferReason.VehicleFuel:
                 case ExtendedTransferManager.TransferReason.VehicleFuelElectric:
-                case ExtendedTransferManager.TransferReason.VehicleSmallWash:
-                case ExtendedTransferManager.TransferReason.VehicleSmallMinorRepair:
-                case ExtendedTransferManager.TransferReason.VehicleSmallMajorRepair:
+                case ExtendedTransferManager.TransferReason.VehicleWash:
+                case ExtendedTransferManager.TransferReason.VehicleMinorRepair:
+                case ExtendedTransferManager.TransferReason.VehicleMajorRepair:
                     data.m_flags &= ~Citizen.Flags.Evacuating;
                     __instance.StartMoving(citizenID, ref data, source_building, offer.Building);
                     return false;

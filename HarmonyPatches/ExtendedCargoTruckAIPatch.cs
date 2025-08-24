@@ -5,7 +5,6 @@ using MoreTransferReasons;
 using MoreTransferReasons.AI;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
-using RoadsideCare.Utils;
 using UnityEngine;
 
 namespace RoadsideCare.HarmonyPatches
@@ -89,6 +88,13 @@ namespace RoadsideCare.HarmonyPatches
                     VehicleNeedsManager.ClearGoingToMode(vehicleID);
                     __instance.SetTarget(vehicleID, ref data, original_targetBuilding);
                 }
+                else
+                {
+                    if(data.Info.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(data.m_targetBuilding))
+                    {
+                        VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
+                    }
+                }
                 return false;
             }
             return true;
@@ -133,8 +139,8 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 if(material == ExtendedTransferManager.TransferReason.VehicleFuel || material == ExtendedTransferManager.TransferReason.VehicleFuelElectric ||
-                    material == ExtendedTransferManager.TransferReason.VehicleLargeWash || material == ExtendedTransferManager.TransferReason.VehicleLargeMinorRepair || 
-                    material == ExtendedTransferManager.TransferReason.VehicleLargeMajorRepair)
+                    material == ExtendedTransferManager.TransferReason.VehicleWash || material == ExtendedTransferManager.TransferReason.VehicleMinorRepair || 
+                    material == ExtendedTransferManager.TransferReason.VehicleMajorRepair)
                 {
                     __instance.SetTarget(vehicleID, ref data, offer.Building);
                     return false;

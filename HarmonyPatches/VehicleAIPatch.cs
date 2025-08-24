@@ -121,7 +121,7 @@ namespace RoadsideCare.HarmonyPatches
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleLargeWash, offer);
+                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
                 return;
             }
 
@@ -181,7 +181,7 @@ namespace RoadsideCare.HarmonyPatches
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleSmallWash, offer);
+                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
                 return;
             }
 

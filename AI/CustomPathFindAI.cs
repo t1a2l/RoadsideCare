@@ -1,7 +1,9 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using ColossalFramework;
 using ColossalFramework.Math;
 using HarmonyLib;
+using MoreTransferReasons.AI;
 using RoadsideCare.Managers;
 using UnityEngine;
 
@@ -28,19 +30,19 @@ namespace RoadsideCare.AI
 
                     if (info.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
                     {
-                        if (TryFindRandomGasPumpPoint(vehicleID, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
+                        if (TryFindRandomGasPumpPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
                         {
                             return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, fuelPointTargetPos, true, true, false);
                         }
                     }
                     if (info.GetAI() is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(vehicleData.m_targetBuilding))
                     {
-                        if (TryFindRandomVehicleWashPoint(vehicleID, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
+                        if (TryFindRandomVehicleWashPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
                         {
                             var result = StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
                             if (!result)
                             {
-                                if (TryFindRandomVehicleTunnelWash(vehicleID, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
+                                if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
                                 {
                                     return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                                 }
@@ -59,19 +61,19 @@ namespace RoadsideCare.AI
 
                 if(info2.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
                 {
-                    if(TryFindRandomGasPumpPoint(vehicleID, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
+                    if(TryFindRandomGasPumpPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
                     {
                         return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, fuelPointTargetPos, true, true, false);
                     }
                 }
                 if (info2.GetAI() is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(vehicleData.m_targetBuilding))
                 {
-                    if (TryFindRandomVehicleWashPoint(vehicleID, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
+                    if (TryFindRandomVehicleWashPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
                     {
                         var result = StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
                         if(!result)
                         {
-                            if (TryFindRandomVehicleTunnelWash(vehicleID, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
+                            if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
                             {
                                 return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                             }
@@ -85,7 +87,7 @@ namespace RoadsideCare.AI
             return false;
         }
 
-        private static bool TryFindRandomGasPumpPoint(ushort vehicleID, ushort buildingID, out Vector3 targetPos)
+        private static bool TryFindRandomGasPumpPoint(ushort vehicleID, ref Vehicle vehicleData, ushort buildingID, out Vector3 targetPos)
         {
             targetPos = Vector3.zero;
             var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
@@ -95,8 +97,28 @@ namespace RoadsideCare.AI
                 return false;
             }
 
+            var fuelPoints = new List<ushort>();
+
+            foreach (ushort point in gasStation.FuelPoints)
+            {
+                var netAI = NetManager.instance.m_segments.m_buffer[point].Info.m_netAI;
+                if (vehicleData.Info.GetAI() is PassengerCarAI && (netAI is FuelPointSmallAI || netAI is FuelPointAI))
+                {
+                    fuelPoints.Add(point);
+                }
+                else if (vehicleData.Info.GetAI() is ExtendedCargoTruckAI && (netAI is FuelPointLargeAI || netAI is FuelPointAI))
+                {
+                    fuelPoints.Add(point);
+                }
+            }
+
+            if (fuelPoints.Count == 0)
+            {
+                return false;
+            }
+
             // Pick a random segment from the fuel points
-            ushort segmentId = gasStation.FuelPoints[Random.Range(0, gasStation.FuelPoints.Count)];
+            ushort segmentId = fuelPoints[Random.Range(0, fuelPoints.Count)];
             var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
 
             if (laneId == 0) return false;
@@ -107,7 +129,7 @@ namespace RoadsideCare.AI
             return true;
         }
 
-        private static bool TryFindRandomVehicleWashPoint(ushort vehicleID, ushort buildingID, out Vector3 targetPos)
+        private static bool TryFindRandomVehicleWashPoint(ushort vehicleID, ref Vehicle vehicleData, ushort buildingID, out Vector3 targetPos)
         {
             targetPos = Vector3.zero;
             var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
@@ -117,8 +139,28 @@ namespace RoadsideCare.AI
                 return false;
             }
 
+            var vehicleWashPoints = new List<ushort>();
+
+            foreach (ushort point in vehicleWashBuilding.VehicleWashPoints)
+            {
+                var netAI = NetManager.instance.m_segments.m_buffer[point].Info.m_netAI;
+                if (vehicleData.Info.GetAI() is PassengerCarAI && (netAI is VehicleWashPointSmallAI || netAI is VehicleWashPointAI))
+                {
+                    vehicleWashPoints.Add(point);
+                }
+                else if (vehicleData.Info.GetAI() is ExtendedCargoTruckAI && (netAI is VehicleWashPointLargeAI || netAI is VehicleWashPointAI))
+                {
+                    vehicleWashPoints.Add(point);
+                }
+            }
+
+            if (vehicleWashPoints.Count == 0)
+            {
+                return false;
+            }
+
             // Pick a random segment from the vehicle wash points
-            ushort segmentId = vehicleWashBuilding.VehicleWashPoints[Random.Range(0, vehicleWashBuilding.VehicleWashPoints.Count)];
+            ushort segmentId = vehicleWashPoints[Random.Range(0, vehicleWashPoints.Count)];
             var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
 
             if (laneId == 0) return false;
@@ -129,7 +171,7 @@ namespace RoadsideCare.AI
             return true;
         }
 
-        private static bool TryFindRandomVehicleTunnelWash(ushort vehicleID, ushort buildingID, out Vector3 targetPos)
+        private static bool TryFindRandomVehicleTunnelWash(ushort vehicleID, ref Vehicle vehicleData, ushort buildingID, out Vector3 targetPos)
         {
             targetPos = Vector3.zero;
             var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
@@ -139,8 +181,28 @@ namespace RoadsideCare.AI
                 return false;
             }
 
+            var vehicleWashLanes = new List<ushort>();
+
+            foreach (ushort point in vehicleWashBuilding.VehicleWashPoints)
+            {
+                var netAI = NetManager.instance.m_segments.m_buffer[point].Info.m_netAI;
+                if (vehicleData.Info.GetAI() is PassengerCarAI && (netAI is VehicleWashLaneSmallAI || netAI is VehicleWashLaneAI))
+                {
+                    vehicleWashLanes.Add(point);
+                }
+                else if (vehicleData.Info.GetAI() is ExtendedCargoTruckAI && (netAI is VehicleWashLaneLargeAI || netAI is VehicleWashLaneAI))
+                {
+                    vehicleWashLanes.Add(point);
+                }
+            }
+
+            if (vehicleWashLanes.Count == 0)
+            {
+                return false;
+            }
+
             // Pick a random segment from the vehicle wash lanes
-            ushort segmentId = vehicleWashBuilding.VehicleWashLanes[Random.Range(0, vehicleWashBuilding.VehicleWashLanes.Count)];
+            ushort segmentId = vehicleWashLanes[Random.Range(0, vehicleWashLanes.Count)];
             var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
 
             if (laneId == 0) return false;

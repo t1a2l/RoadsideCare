@@ -29,7 +29,9 @@ namespace RoadsideCare.HarmonyPatches
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
 
-            if(segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashPointAI)
+            if(segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not FuelPointSmallAI && segment.Info.m_netAI is not FuelPointLargeAI && 
+                segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashLaneSmallAI && segment.Info.m_netAI is not VehicleWashLaneLargeAI &&
+                segment.Info.m_netAI is not VehicleWashPointAI && segment.Info.m_netAI is not VehicleWashPointSmallAI && segment.Info.m_netAI is not VehicleWashPointLargeAI)
             {
                 return;
             }
@@ -41,7 +43,8 @@ namespace RoadsideCare.HarmonyPatches
                     continue;
 
                 if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID) && 
-                    segment.Info.m_netAI is FuelPointAI && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    (segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI)
+                    && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                 {
                     var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                     gasStation.FuelPoints.Add(segmentID);
@@ -50,14 +53,16 @@ namespace RoadsideCare.HarmonyPatches
                 }
                 else if (b.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
                 {
-                    if (segment.Info.m_netAI is VehicleWashLaneAI && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    if ((segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI) 
+                        && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         vehicleWashBuilding.VehicleWashLanes.Add(segmentID);
                         VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
                         break;
                     }
-                    else if (segment.Info.m_netAI is VehicleWashPointAI && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    else if ((segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI) 
+                        && IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         vehicleWashBuilding.VehicleWashPoints.Add(segmentID);
@@ -72,17 +77,22 @@ namespace RoadsideCare.HarmonyPatches
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
 
-            if (segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashPointAI)
+            if (segment.Info.m_netAI is not FuelPointAI && segment.Info.m_netAI is not FuelPointSmallAI && segment.Info.m_netAI is not FuelPointLargeAI &&
+                segment.Info.m_netAI is not VehicleWashLaneAI && segment.Info.m_netAI is not VehicleWashLaneSmallAI && segment.Info.m_netAI is not VehicleWashLaneLargeAI &&
+                segment.Info.m_netAI is not VehicleWashPointAI && segment.Info.m_netAI is not VehicleWashPointSmallAI && segment.Info.m_netAI is not VehicleWashPointLargeAI)
             {
                 return;
             }
 
-            if (segment.Info.m_netAI is FuelPointAI && !GasStationManager.SegmentIdBelongsToAGasStation(segmentID))
+            if ((segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI) 
+                && !GasStationManager.SegmentIdBelongsToAGasStation(segmentID))
             {
                 return;
             }
 
-            if ((segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashPointAI) && !VehicleWashBuildingManager.SegmentIdBelongsToAVehicleWashBuilding(segmentID))
+            if ((segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI 
+                || segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI) 
+                && !VehicleWashBuildingManager.SegmentIdBelongsToAVehicleWashBuilding(segmentID))
             {
                 return;
             }
@@ -93,7 +103,8 @@ namespace RoadsideCare.HarmonyPatches
                 if ((b.m_flags & Building.Flags.Created) == 0)
                     continue;
 
-                if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID) && segment.Info.m_netAI is FuelPointAI)
+                if (b.Info.m_buildingAI is GasPumpAI && GasStationManager.GasStationBuildingExist(buildingID) 
+                    && (segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI))
                 {
                     var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                     gasStation.FuelPoints.Remove(segmentID);
@@ -102,14 +113,14 @@ namespace RoadsideCare.HarmonyPatches
                 }
                 else if (b.Info.m_buildingAI is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(buildingID))
                 {
-                    if (segment.Info.m_netAI is VehicleWashLaneAI)
+                    if (segment.Info.m_netAI is VehicleWashLaneAI || segment.Info.m_netAI is VehicleWashLaneSmallAI || segment.Info.m_netAI is VehicleWashLaneLargeAI)
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         vehicleWashBuilding.VehicleWashLanes.Remove(segmentID);
                         VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
                         break;
                     }
-                    else if (segment.Info.m_netAI is VehicleWashPointAI)
+                    else if (segment.Info.m_netAI is VehicleWashPointAI || segment.Info.m_netAI is VehicleWashPointSmallAI || segment.Info.m_netAI is VehicleWashPointLargeAI)
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         vehicleWashBuilding.VehicleWashPoints.Remove(segmentID);
