@@ -88,13 +88,6 @@ namespace RoadsideCare.HarmonyPatches
                     VehicleNeedsManager.ClearGoingToMode(vehicleID);
                     __instance.SetTarget(vehicleID, ref data, original_targetBuilding);
                 }
-                else
-                {
-                    if(data.Info.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(data.m_targetBuilding))
-                    {
-                        VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
-                    }
-                }
                 return false;
             }
             return true;
