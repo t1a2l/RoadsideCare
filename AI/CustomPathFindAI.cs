@@ -28,6 +28,12 @@ namespace RoadsideCare.AI
                     BuildingManager instance = Singleton<BuildingManager>.instance;
                     BuildingInfo info = instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding].Info;
 
+                    if (info.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
+                    {
+                        Randomizer randomizer2 = new(vehicleID);
+                        info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
+                        return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
+                    }
                     if (info.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
                     {
                         if (TryFindRandomGasPumpPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
@@ -40,18 +46,28 @@ namespace RoadsideCare.AI
                         if (TryFindRandomVehicleWashPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
                         {
                             var result = StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
-                            if (!result)
+                            if (result)
+                            {
+                                return result;
+                            }
+                            else
                             {
                                 if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
                                 {
                                     return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                                 }
+                                return false;
                             }
                         }
+                        else
+                        {
+                            if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
+                            {
+                                return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
+                            }
+                            return false;
+                        }
                     }
-                    Randomizer randomizer = new(vehicleID);
-                    info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding], ref randomizer, m_info, out Vector3 a, out Vector3 target);
-                    return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target, true, true, false);
                 }
             }
             else if (vehicleData.m_targetBuilding != 0)
@@ -59,7 +75,13 @@ namespace RoadsideCare.AI
                 BuildingManager instance2 = Singleton<BuildingManager>.instance;
                 BuildingInfo info2 = instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding].Info;
 
-                if(info2.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
+                if (info2.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
+                {
+                    Randomizer randomizer2 = new(vehicleID);
+                    info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
+                    return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
+                }
+                if (info2.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
                 {
                     if(TryFindRandomGasPumpPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
                     {
@@ -71,18 +93,28 @@ namespace RoadsideCare.AI
                     if (TryFindRandomVehicleWashPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
                     {
                         var result = StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
-                        if(!result)
+                        if (result)
+                        {
+                            return result;
+                        }
+                        else
                         {
                             if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
                             {
                                 return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                             }
+                            return false;
                         }
                     }
+                    else
+                    {
+                        if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
+                        {
+                            return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
+                        }
+                        return false;
+                    }
                 }
-                Randomizer randomizer2 = new(vehicleID);
-                info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
-                return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
             }
             return false;
         }
