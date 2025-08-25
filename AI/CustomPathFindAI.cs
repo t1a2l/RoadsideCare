@@ -229,7 +229,7 @@ namespace RoadsideCare.AI
 
             var vehicleWashLanes = new List<ushort>();
 
-            foreach (ushort point in vehicleWashBuilding.VehicleWashPoints)
+            foreach (ushort point in vehicleWashBuilding.VehicleWashLanes)
             {
                 var netAI = NetManager.instance.m_segments.m_buffer[point].Info.m_netAI;
                 if (vehicleData.Info.GetAI() is PassengerCarAI && (netAI is VehicleWashLaneSmallAI || netAI is VehicleWashLaneAI))
