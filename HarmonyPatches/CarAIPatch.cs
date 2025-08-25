@@ -132,6 +132,10 @@ namespace RoadsideCare.HarmonyPatches
 
             if (vehicleNeeds.IsRefueling)
             {
+                data.m_flags |= Vehicle.Flags.Stopped;
+                data.m_flags |= Vehicle.Flags.WaitingPath;
+                data.m_blockCounter = 0;
+
                 var newAmount = vehicleNeeds.FuelAmount + vehicleNeeds.FuelPerFrame;
 
                 VehicleNeedsManager.SetFuelAmount(vehicleID, newAmount);
@@ -147,6 +151,10 @@ namespace RoadsideCare.HarmonyPatches
 
             if (vehicleNeeds.IsAtHandWash)
             {
+                data.m_flags |= Vehicle.Flags.Stopped;
+                data.m_flags |= Vehicle.Flags.WaitingPath;
+                data.m_blockCounter = 0;
+
                 var newAmount = vehicleNeeds.DirtPercentage - vehicleNeeds.DirtPerFrame;
 
                 // Update the manager with the new dirt percentage.
@@ -202,10 +210,6 @@ namespace RoadsideCare.HarmonyPatches
                     TunnelWashComplete = true;
                 }
             }
-
-            data.m_flags |= Vehicle.Flags.Stopped;
-            data.m_flags |= Vehicle.Flags.WaitingPath;
-            data.m_blockCounter = 0;
 
             vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
 
