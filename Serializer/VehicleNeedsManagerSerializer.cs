@@ -10,7 +10,7 @@ namespace RoadsideCare.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 1;
+        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 2;
 
         public static void SaveData(FastList<byte> Data)
         {
@@ -58,6 +58,20 @@ namespace RoadsideCare.Serializer
                 StorageData.WriteBool(kvp.Value.IsGoingToTunnelWash, Data);
                 StorageData.WriteBool(kvp.Value.IsAtHandWash, Data);
                 StorageData.WriteBool(kvp.Value.IsGoingToHandWash, Data);
+                StorageData.WriteUInt32(kvp.Value.LastFrameIndex, Data);
+                StorageData.WriteFloat(kvp.Value.TunnelWashSegmentLength, Data);
+                StorageData.WriteFloat(kvp.Value.TunnelWashSegmentMaxSpeed, Data);
+                StorageData.WriteFloat(kvp.Value.TunnelWashDistanceTraveled, Data);
+                StorageData.WriteFloat(kvp.Value.TunnelWashDirtStartPercentage, Data);
+                StorageData.WriteFloat(kvp.Value.TunnelWashStartPosition.x, Data);
+                StorageData.WriteFloat(kvp.Value.TunnelWashStartPosition.y, Data);
+                StorageData.WriteFloat(kvp.Value.TunnelWashStartPosition.z, Data);
+                StorageData.WriteByte(kvp.Value.TunnelWashEntryOffset, Data);
+                StorageData.WriteByte(kvp.Value.TunnelWashPreviousOffset, Data);
+                StorageData.WriteBool(kvp.Value.TunnelWashIsForwardDirection, Data);
+                StorageData.WriteBool(kvp.Value.TunnelWashDirectionDetected, Data);
+                StorageData.WriteUInt16(kvp.Value.TunnelWashStartNode, Data);
+                StorageData.WriteUInt16(kvp.Value.TunnelWashEndNode, Data);
 
                 // Wear related
                 StorageData.WriteFloat(kvp.Value.WearPercentage, Data);
@@ -155,6 +169,67 @@ namespace RoadsideCare.Serializer
 
                     bool isGoingToHandWash = StorageData.ReadBool(Data, ref iIndex);
 
+                    uint lastFrameIndex = 0;
+
+                    float tunnelWashSegmentLength = 1;
+
+                    float tunnelWashSegmentMaxSpeed = 1;
+
+                    float tunnelWashDistanceTraveled = 1;
+
+                    float tunnelWashDirtStartPercentage = 1;
+
+                    float tunnelWashStartPosition_x = 0;
+
+                    float tunnelWashStartPosition_y = 0;
+
+                    float tunnelWashStartPosition_z = 0;
+
+                    byte tunnelWashEntryOffset = 0;
+
+                    byte tunnelWashPreviousOffset = 0;
+
+                    bool tunnelWashIsForwardDirection = true;
+
+                    bool tunnelWashDirectionDetected = false;
+
+                    ushort tunnelWashStartNode = 0;
+
+                    ushort tunnelWashEndNode = 0;
+
+                    if (iVehicleNeedsManagerVersion >= 2)
+                    {
+                        lastFrameIndex = StorageData.ReadUInt32(Data, ref iIndex);
+
+                        tunnelWashSegmentLength = StorageData.ReadFloat(Data, ref iIndex);
+
+                        tunnelWashSegmentMaxSpeed = StorageData.ReadFloat(Data, ref iIndex);
+
+                        tunnelWashDistanceTraveled = StorageData.ReadFloat(Data, ref iIndex);
+
+                        tunnelWashDirtStartPercentage = StorageData.ReadFloat(Data, ref iIndex);
+
+                        tunnelWashStartPosition_x = StorageData.ReadFloat(Data, ref iIndex);
+
+                        tunnelWashStartPosition_y = StorageData.ReadFloat(Data, ref iIndex);
+
+                        tunnelWashStartPosition_z = StorageData.ReadFloat(Data, ref iIndex);
+
+                        tunnelWashEntryOffset = StorageData.ReadByte(Data, ref iIndex);
+
+                        tunnelWashPreviousOffset = StorageData.ReadByte(Data, ref iIndex);
+
+                        tunnelWashIsForwardDirection = StorageData.ReadBool(Data, ref iIndex);
+
+                        tunnelWashDirectionDetected = StorageData.ReadBool(Data, ref iIndex);
+
+                        tunnelWashStartNode = StorageData.ReadUInt16(Data, ref iIndex);
+
+                        tunnelWashEndNode = StorageData.ReadUInt16(Data, ref iIndex);
+                    }
+
+                    Vector3 tunnelWashStartPosition = new(tunnelWashStartPosition_x, tunnelWashStartPosition_y, tunnelWashStartPosition_z);
+
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
@@ -172,8 +247,10 @@ namespace RoadsideCare.Serializer
                     if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
                     {
                         VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, serviceTimer, fuelAmount, fuelCapacity, dirtPercentage,
-                            wearPercentage, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isAtTunnelWash, isAtTunnelWashExit,
-                            isGoingToTunnelWash, isAtHandWash, isGoingToHandWash, isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
+                            wearPercentage, lastFrameIndex, tunnelWashSegmentLength, tunnelWashSegmentMaxSpeed, tunnelWashDistanceTraveled, tunnelWashDirtStartPercentage,
+                            tunnelWashStartPosition, tunnelWashEntryOffset, tunnelWashPreviousOffset, tunnelWashIsForwardDirection, tunnelWashDirectionDetected, tunnelWashStartNode,
+                            tunnelWashEndNode, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isAtTunnelWash, isAtTunnelWashExit, isGoingToTunnelWash, 
+                            isAtHandWash, isGoingToHandWash, isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
                     }
 
                     CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);

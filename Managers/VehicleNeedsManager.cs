@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using ColossalFramework;
+using UnityEngine;
 
 namespace RoadsideCare.Managers
 {
@@ -31,6 +32,18 @@ namespace RoadsideCare.Managers
             public bool IsGoingToTunnelWash;
             public bool IsAtHandWash;
             public bool IsGoingToHandWash;
+            public uint LastFrameIndex;
+            public float TunnelWashSegmentLength;
+            public float TunnelWashSegmentMaxSpeed;
+            public float TunnelWashDistanceTraveled;
+            public float TunnelWashDirtStartPercentage;
+            public Vector3 TunnelWashStartPosition;
+            public byte TunnelWashEntryOffset;
+            public byte TunnelWashPreviousOffset;
+            public bool TunnelWashIsForwardDirection;
+            public bool TunnelWashDirectionDetected;
+            public ushort TunnelWashStartNode;
+            public ushort TunnelWashEndNode;
 
             // wear related
             public float WearPercentage;
@@ -89,10 +102,13 @@ namespace RoadsideCare.Managers
 
         public static bool ParkedVehicleNeedsExist(ushort parkedVehicleId) => ParkedVehiclesNeeds.ContainsKey(parkedVehicleId);
 
-        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float serviceTimer, float fuelAmount, float fuelCapacity,
-            float dirtPercentage, float wearPercenatge, float fuelPerFrame = 0, float dirtPerFrame = 0, float wearPerFrame = 0, bool isRefueling = false, 
-            bool isGoingToRefuel = false, bool isAtTunnelWash = false, bool isAtTunnelWashExit = false, bool isGoingToTunnelWash = false, bool isAtHandWash = false, 
-            bool isGoingToHandWash = false, bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
+        public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float serviceTimer, float fuelAmount, 
+            float fuelCapacity, float dirtPercentage, float wearPercenatge, uint lastFrameIndex = 0, float tunnelWashSegmentLength = 1, float tunnelWashSegmentMaxSpeed = 0, 
+            float tunnelWashDistanceTraveled = 0, float tunnelWashDirtStartPercentage = 0, Vector3 tunnelWashStartPosition = default, byte tunnelWashEntryOffset = 0,
+            byte tunnelWashPreviousOffset = 0, bool tunnelWashIsForwardDirection = true, bool tunnelWashDirectionDetected = false, ushort tunnelWashStartNode = 0,
+            ushort tunnelWashEndNode = 0, float fuelPerFrame = 0, float dirtPerFrame = 0, float wearPerFrame = 0, bool isRefueling = false, bool isGoingToRefuel = false, 
+            bool isAtTunnelWash = false, bool isAtTunnelWashExit = false, bool isGoingToTunnelWash = false, bool isAtHandWash = false, bool isGoingToHandWash = false, 
+            bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
         {
             var vehicleNeedsStruct = new VehicleNeedsStruct
             {
@@ -111,6 +127,18 @@ namespace RoadsideCare.Managers
                 IsGoingToTunnelWash = isGoingToTunnelWash,
                 IsAtHandWash = isAtHandWash,
                 IsGoingToHandWash = isGoingToHandWash,
+                LastFrameIndex = lastFrameIndex,
+                TunnelWashSegmentLength = tunnelWashSegmentLength,
+                TunnelWashSegmentMaxSpeed = tunnelWashSegmentMaxSpeed,
+                TunnelWashDistanceTraveled = tunnelWashDistanceTraveled,
+                TunnelWashDirtStartPercentage = tunnelWashDirtStartPercentage,
+                TunnelWashStartPosition = tunnelWashStartPosition,
+                TunnelWashEntryOffset = tunnelWashEntryOffset,
+                TunnelWashPreviousOffset = tunnelWashPreviousOffset,
+                TunnelWashIsForwardDirection = tunnelWashIsForwardDirection,
+                TunnelWashDirectionDetected = tunnelWashDirectionDetected,
+                TunnelWashStartNode = tunnelWashStartNode,
+                TunnelWashEndNode = tunnelWashEndNode,
                 WearPercentage = wearPercenatge,
                 WearPerFrame = wearPerFrame,
                 IsBeingRepaired = isBeingRepaired,
@@ -363,6 +391,114 @@ namespace RoadsideCare.Managers
             if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
             {
                 vehicleNeedsStruct.IsGoingToHandWash = true;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetLastFrameIndex(ushort vehicleId, uint lastFrameIndex)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.LastFrameIndex = lastFrameIndex;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashSegmentLength(ushort vehicleId, float tunnelWashSegmentLength)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashSegmentLength = tunnelWashSegmentLength;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashSegmentMaxSpeed(ushort vehicleId, float tunnelWashSegmentMaxSpeed)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashSegmentMaxSpeed = tunnelWashSegmentMaxSpeed;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashDistanceTraveled(ushort vehicleId, float tunnelWashDistanceTraveled)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashDistanceTraveled = tunnelWashDistanceTraveled;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashDirtStartPercentage(ushort vehicleId, float tunnelWashDirtStartPercentage)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashDirtStartPercentage = tunnelWashDirtStartPercentage;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashStartPosition(ushort vehicleId, Vector3 tunnelWashStartPosition)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashStartPosition = tunnelWashStartPosition;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashEntryOffset(ushort vehicleId, byte tunnelWashEntryOffset)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashEntryOffset = tunnelWashEntryOffset;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashPreviousOffset(ushort vehicleId, byte tunnelWashPreviousOffset)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashPreviousOffset = tunnelWashPreviousOffset;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashIsForwardDirection(ushort vehicleId, bool tunnelWashIsForwardDirection)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashIsForwardDirection = tunnelWashIsForwardDirection;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashDirectionDetected(ushort vehicleId, bool tunnelWashDirectionDetected)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashDirectionDetected = tunnelWashDirectionDetected;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashStartNode(ushort vehicleId, ushort tunnelWashStartNode)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashStartNode = tunnelWashStartNode;
+                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+            }
+        }
+
+        public static void SetTunnelWashEndNode(ushort vehicleId, ushort tunnelWashEndNode)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            {
+                vehicleNeedsStruct.TunnelWashEndNode = tunnelWashEndNode;
                 VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
             }
         }
