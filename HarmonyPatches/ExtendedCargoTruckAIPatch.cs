@@ -19,32 +19,32 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                if (vehicleNeeds.IsGoingToRefuel)
+                if (VehicleNeedsManager.IsGoingToRefuel(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
                     __result = "Driving to gas station ";
                 }
-                else if (vehicleNeeds.IsRefueling)
+                else if (VehicleNeedsManager.IsRefueling(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
                     __result = "Fueling vehicle at gas station ";
                 }
-                else if (vehicleNeeds.IsGoingToHandWash || vehicleNeeds.IsGoingToTunnelWash)
+                else if (VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
                     __result = "Driving to car wash ";
                 }
-                else if (vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash)
+                else if (VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
                     __result = "Washing vehicle at car wash ";
                 }
-                else if (vehicleNeeds.IsGoingToGetRepaired)
+                else if (VehicleNeedsManager.IsGoingToGetRepaired(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
                     __result = "Driving to mechanic ";
                 }
-                else if (vehicleNeeds.IsBeingRepaired)
+                else if (VehicleNeedsManager.IsBeingRepaired(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
                     __result = "Repairing vehicle at mechanic ";
@@ -99,8 +99,7 @@ namespace RoadsideCare.HarmonyPatches
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                if (vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash || vehicleNeeds.IsAtTunnelWash)
+                if (VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
                     CarAIPatch.ArriveAtTarget(__instance, vehicleID, ref data);
                     __result = false;
@@ -116,9 +115,7 @@ namespace RoadsideCare.HarmonyPatches
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-
-                if (vehicleNeeds.IsRefueling || vehicleNeeds.IsAtHandWash || vehicleNeeds.IsGoingToTunnelWash || vehicleNeeds.IsAtTunnelWash)
+                if (VehicleNeedsManager.IsRefueling(vehicleID) || VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
                     CarAIPatch.TakingCareOfVehicle(__instance, vehicleID, ref data);
                 }
@@ -148,9 +145,8 @@ namespace RoadsideCare.HarmonyPatches
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                bool isOnWayToCareCenter = vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash || vehicleNeeds.IsGoingToTunnelWash || vehicleNeeds.IsGoingToGetRepaired;
-                bool isBeingCaredFor = vehicleNeeds.IsRefueling || vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash || vehicleNeeds.IsBeingRepaired;
+                bool isOnWayToCareCenter = VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID) || VehicleNeedsManager.IsGoingToGetRepaired(vehicleID);
+                bool isBeingCaredFor = VehicleNeedsManager.IsRefueling(vehicleID) || VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID) || VehicleNeedsManager.IsBeingRepaired(vehicleID);
                 if (isOnWayToCareCenter || isBeingCaredFor)
                 {
                     return false;

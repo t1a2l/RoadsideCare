@@ -20,13 +20,15 @@ namespace RoadsideCare.HarmonyPatches
             {
                 return;
             }
+
             ushort vehicleId = 0;
+            ushort parkedVehicleId = 0;
             VehicleInfo vehicleInfo = null;
             float fuelValue = 0;
             float dirtValue = 0;
             //float wearValue = 0;
 
-            //bool isBroken = false;
+            bool isBroken = false;
             bool isOutOfFuel = false;
 
             if (___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && VehicleNeedsManager.VehicleNeedsExist(___m_InstanceID.Vehicle))
@@ -37,22 +39,22 @@ namespace RoadsideCare.HarmonyPatches
                 fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
                 dirtValue = vehicleNeeds.DirtPercentage / 100;
                 //wearValue = vehicleNeeds.WearPercentage / 100;
-                //isBroken = vehicleNeeds.IsBroken;
-                isOutOfFuel = vehicleNeeds.IsOutOfFuel;
+                isBroken = (vehicleNeeds.StateFlags & VehicleNeedsManager.VehicleStateFlags.IsBroken) != 0;
+                isOutOfFuel = (vehicleNeeds.StateFlags & VehicleNeedsManager.VehicleStateFlags.IsOutOfFuel) != 0;
             }
             else if (___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && VehicleNeedsManager.ParkedVehicleNeedsExist(___m_InstanceID.ParkedVehicle))
             {
-                vehicleId = ___m_InstanceID.ParkedVehicle;
+                parkedVehicleId = ___m_InstanceID.ParkedVehicle;
                 vehicleInfo = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
-                var vehicleNeeds = VehicleNeedsManager.GetParkedVehicleNeeds(vehicleId);
-                fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
-                dirtValue = vehicleNeeds.DirtPercentage / 100;
-                //wearValue = vehicleNeeds.WearPercentage / 100;
-                //isBroken = vehicleNeeds.IsBroken;
-                isOutOfFuel = vehicleNeeds.IsOutOfFuel;
+                var parkedVehicleNeeds = VehicleNeedsManager.GetParkedVehicleNeeds(vehicleId);
+                fuelValue = parkedVehicleNeeds.FuelAmount / parkedVehicleNeeds.FuelCapacity;
+                dirtValue = parkedVehicleNeeds.DirtPercentage / 100;
+                //wearValue = parkedVehicleNeeds.WearPercentage / 100;
+                isBroken = (parkedVehicleNeeds.StateFlags & VehicleNeedsManager.ParkedVehicleStateFlags.IsBroken) != 0;
+                isOutOfFuel = (parkedVehicleNeeds.StateFlags & VehicleNeedsManager.ParkedVehicleStateFlags.IsOutOfFuel) != 0;
             }
 
-            if (vehicleId != 0 && vehicleInfo != null)
+            if ((vehicleId != 0 || parkedVehicleId != 0) && vehicleInfo != null)
             {
                 bool isElectric = vehicleInfo.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                 Type.text += Environment.NewLine;
@@ -103,8 +105,6 @@ namespace RoadsideCare.HarmonyPatches
                 float fuelValue = vehicleNeeds.FuelAmount / vehicleNeeds.FuelCapacity;
                 float dirtValue = vehicleNeeds.DirtPercentage / 100;
                 //float wearValue = vehicleNeeds.WearPercentage / 100;
-                //bool isBroken = vehicleNeeds.IsBroken;
-                bool isOutOfFuel = vehicleNeeds.IsOutOfFuel;
 
                 Type.text += "Fuel Percent:  " + fuelValue.ToString("#0%");
                 Type.text += Environment.NewLine;
@@ -112,13 +112,13 @@ namespace RoadsideCare.HarmonyPatches
                 //Type.text += Environment.NewLine;
                 //Type.text += " Wear Percent:  " + wearValue.ToString("#0%");
 
-                //if (isBroken)
+                //if ((vehicleNeeds.StateFlags & VehicleNeedsManager.VehicleStateFlags.IsBroken) != 0)
                 //{
                 //    Type.text += Environment.NewLine;
                 //    Type.text += " Broke Down  ";
                 //}
 
-                if (isOutOfFuel)
+                if ((vehicleNeeds.StateFlags & VehicleNeedsManager.VehicleStateFlags.IsOutOfFuel) != 0)
                 {
                     Type.text += Environment.NewLine;
                     Type.text += " Out Of Fuel  ";

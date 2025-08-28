@@ -47,17 +47,10 @@ namespace RoadsideCare.Serializer
                 StorageData.WriteFloat(kvp.Value.FuelAmount, Data);
                 StorageData.WriteFloat(kvp.Value.FuelCapacity, Data);
                 StorageData.WriteFloat(kvp.Value.FuelPerFrame, Data);
-                StorageData.WriteBool(kvp.Value.IsRefueling, Data);
-                StorageData.WriteBool(kvp.Value.IsGoingToRefuel, Data);
 
                 // Dirt related
                 StorageData.WriteFloat(kvp.Value.DirtPercentage, Data);
                 StorageData.WriteFloat(kvp.Value.DirtPerFrame, Data);
-                StorageData.WriteBool(kvp.Value.IsAtTunnelWash, Data);
-                StorageData.WriteBool(kvp.Value.IsAtTunnelWashExit, Data);
-                StorageData.WriteBool(kvp.Value.IsGoingToTunnelWash, Data);
-                StorageData.WriteBool(kvp.Value.IsAtHandWash, Data);
-                StorageData.WriteBool(kvp.Value.IsGoingToHandWash, Data);
                 StorageData.WriteUInt32(kvp.Value.LastFrameIndex, Data);
                 StorageData.WriteFloat(kvp.Value.TunnelWashSegmentLength, Data);
                 StorageData.WriteFloat(kvp.Value.TunnelWashSegmentMaxSpeed, Data);
@@ -76,12 +69,9 @@ namespace RoadsideCare.Serializer
                 // Wear related
                 StorageData.WriteFloat(kvp.Value.WearPercentage, Data);
                 StorageData.WriteFloat(kvp.Value.WearPerFrame, Data);
-                StorageData.WriteBool(kvp.Value.IsGoingToGetRepaired, Data);
-                StorageData.WriteBool(kvp.Value.IsBeingRepaired, Data);
 
-                // Vehicle issues
-                StorageData.WriteBool(kvp.Value.IsBroken, Data);
-                StorageData.WriteBool(kvp.Value.IsOutOfFuel, Data);
+                // NEW: Write the packed flags as a single UInt32
+                StorageData.WriteUInt32((uint)kvp.Value.StateFlags, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -107,9 +97,8 @@ namespace RoadsideCare.Serializer
                 // Wear related
                 StorageData.WriteFloat(kvp.Value.WearPercentage, Data);
 
-                // Vehicle issues
-                StorageData.WriteBool(kvp.Value.IsBroken, Data);
-                StorageData.WriteBool(kvp.Value.IsOutOfFuel, Data);
+                // NEW: Write the packed flags as a single UInt32
+                StorageData.WriteUInt32((uint)kvp.Value.StateFlags, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -145,56 +134,39 @@ namespace RoadsideCare.Serializer
 
                     // Fuel related
                     float fuelAmount = StorageData.ReadFloat(Data, ref iIndex);
-
                     float fuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
-
                     float fuelPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
-                    bool isRefueling = StorageData.ReadBool(Data, ref iIndex);
-
-                    bool isGoingToRefuel = StorageData.ReadBool(Data, ref iIndex);
+                    // Initialize boolean flags -will be overridden by flags if version >= 3
+                    bool isRefueling = false;
+                    bool isGoingToRefuel = false;
+                    bool isAtTunnelWash = false;
+                    bool isAtTunnelWashExit = false;
+                    bool isGoingToTunnelWash = false;
+                    bool isAtHandWash = false;
+                    bool isGoingToHandWash = false;
+                    bool tunnelWashIsForwardDirection = true;
+                    bool tunnelWashDirectionDetected = false;
+                    bool isGoingToGetRepaired = false;
+                    bool isBeingRepaired = false;
+                    bool isBroken = false;
+                    bool isOutOfFuel = false;
 
                     // Dirt related
                     float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
-
                     float dirtPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
-                    bool isAtTunnelWash = StorageData.ReadBool(Data, ref iIndex);
-
-                    bool isAtTunnelWashExit = StorageData.ReadBool(Data, ref iIndex);
-
-                    bool isGoingToTunnelWash = StorageData.ReadBool(Data, ref iIndex);
-
-                    bool isAtHandWash = StorageData.ReadBool(Data, ref iIndex);
-
-                    bool isGoingToHandWash = StorageData.ReadBool(Data, ref iIndex);
-
                     uint lastFrameIndex = 0;
-
                     float tunnelWashSegmentLength = 1;
-
                     float tunnelWashSegmentMaxSpeed = 1;
-
                     float tunnelWashDistanceTraveled = 1;
-
                     float tunnelWashDirtStartPercentage = 1;
-
                     float tunnelWashStartPosition_x = 0;
-
                     float tunnelWashStartPosition_y = 0;
-
                     float tunnelWashStartPosition_z = 0;
-
                     byte tunnelWashEntryOffset = 0;
-
                     byte tunnelWashPreviousOffset = 0;
-
-                    bool tunnelWashIsForwardDirection = true;
-
-                    bool tunnelWashDirectionDetected = false;
-
                     ushort tunnelWashStartNode = 0;
-
                     ushort tunnelWashEndNode = 0;
 
                     if (iVehicleNeedsManagerVersion >= 2)
@@ -219,10 +191,6 @@ namespace RoadsideCare.Serializer
 
                         tunnelWashPreviousOffset = StorageData.ReadByte(Data, ref iIndex);
 
-                        tunnelWashIsForwardDirection = StorageData.ReadBool(Data, ref iIndex);
-
-                        tunnelWashDirectionDetected = StorageData.ReadBool(Data, ref iIndex);
-
                         tunnelWashStartNode = StorageData.ReadUInt16(Data, ref iIndex);
 
                         tunnelWashEndNode = StorageData.ReadUInt16(Data, ref iIndex);
@@ -232,25 +200,62 @@ namespace RoadsideCare.Serializer
 
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
-
                     float wearPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
-                    bool isGoingToGetRepaired = StorageData.ReadBool(Data, ref iIndex);
-
-                    bool isBeingRepaired = StorageData.ReadBool(Data, ref iIndex);
-
-                    // Vehicle issues
-                    bool isBroken = StorageData.ReadBool(Data, ref iIndex);
-
-                    bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
-
-                    if(!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
+                    // NEW: Read packed flags for version 3+
+                    VehicleNeedsManager.VehicleStateFlags stateFlags = VehicleNeedsManager.VehicleStateFlags.None;
+                    if (iVehicleNeedsManagerVersion >= 3)
                     {
-                        VehicleNeedsManager.CreateVehicleNeeds(vehicleId, originalTargetBuilding, ownerId, serviceTimer, fuelAmount, fuelCapacity, dirtPercentage,
-                            wearPercentage, lastFrameIndex, tunnelWashSegmentLength, tunnelWashSegmentMaxSpeed, tunnelWashDistanceTraveled, tunnelWashDirtStartPercentage,
-                            tunnelWashStartPosition, tunnelWashEntryOffset, tunnelWashPreviousOffset, tunnelWashIsForwardDirection, tunnelWashDirectionDetected, tunnelWashStartNode,
-                            tunnelWashEndNode, fuelPerFrame, dirtPerFrame, wearPerFrame, isRefueling, isGoingToRefuel, isAtTunnelWash, isAtTunnelWashExit, isGoingToTunnelWash, 
-                            isAtHandWash, isGoingToHandWash, isGoingToGetRepaired, isBeingRepaired, isBroken, isOutOfFuel);
+                        stateFlags = (VehicleNeedsManager.VehicleStateFlags)StorageData.ReadUInt32(Data, ref iIndex);
+                    }
+                    else
+                    {
+                        // Convert individual booleans to flags (for legacy compatibility)
+                        if (isRefueling) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsRefueling;
+                        if (isGoingToRefuel) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToRefuel;
+                        if (isAtTunnelWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsAtTunnelWash;
+                        if (isAtTunnelWashExit) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsAtTunnelWashExit;
+                        if (isGoingToTunnelWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToTunnelWash;
+                        if (isAtHandWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsAtHandWash;
+                        if (isGoingToHandWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToHandWash;
+                        if (isBeingRepaired) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsBeingRepaired;
+                        if (isGoingToGetRepaired) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToGetRepaired;
+                        if (isBroken) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsBroken;
+                        if (isOutOfFuel) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsOutOfFuel;
+                        if (tunnelWashIsForwardDirection) stateFlags |= VehicleNeedsManager.VehicleStateFlags.TunnelWashIsForwardDirection;
+                        if (tunnelWashDirectionDetected) stateFlags |= VehicleNeedsManager.VehicleStateFlags.TunnelWashDirectionDetected;
+                    }
+
+                    if (!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
+                    {
+                        // Create the vehicle needs using the new method signature
+                        var vehicleNeeds = new VehicleNeedsManager.VehicleNeedsStruct
+                        {
+                            OriginalTargetBuilding = originalTargetBuilding,
+                            OwnerId = ownerId,
+                            ServiceTimer = serviceTimer,
+                            FuelAmount = fuelAmount,
+                            FuelCapacity = fuelCapacity,
+                            FuelPerFrame = fuelPerFrame,
+                            DirtPercentage = dirtPercentage,
+                            DirtPerFrame = dirtPerFrame,
+                            LastFrameIndex = lastFrameIndex,
+                            TunnelWashSegmentLength = tunnelWashSegmentLength,
+                            TunnelWashSegmentMaxSpeed = tunnelWashSegmentMaxSpeed,
+                            TunnelWashDistanceTraveled = tunnelWashDistanceTraveled,
+                            TunnelWashDirtStartPercentage = tunnelWashDirtStartPercentage,
+                            TunnelWashStartPosition = tunnelWashStartPosition,
+                            TunnelWashEntryOffset = tunnelWashEntryOffset,
+                            TunnelWashPreviousOffset = tunnelWashPreviousOffset,
+                            TunnelWashStartNode = tunnelWashStartNode,
+                            TunnelWashEndNode = tunnelWashEndNode,
+                            WearPercentage = wearPercentage,
+                            WearPerFrame = wearPerFrame,
+                            StateFlags = stateFlags
+                        };
+
+                        // Add to the manager
+                        VehicleNeedsManager.GetVehiclesNeeds()[vehicleId] = vehicleNeeds;
                     }
 
                     CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
@@ -278,14 +283,29 @@ namespace RoadsideCare.Serializer
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                    // Vehicle issues
-                    bool isBroken = StorageData.ReadBool(Data, ref iIndex);
+                    uint frameIndex = 0;
+                    if (iVehicleNeedsManagerVersion >= 2)
+                    {
+                        frameIndex = StorageData.ReadUInt32(Data, ref iIndex);
+                    }
 
-                    bool isOutOfFuel = StorageData.ReadBool(Data, ref iIndex);
+                    VehicleNeedsManager.ParkedVehicleStateFlags stateFlags = (VehicleNeedsManager.ParkedVehicleStateFlags)StorageData.ReadUInt32(Data, ref iIndex);
 
                     if (!VehicleNeedsManager.ParkedVehicleNeedsExist(parkedVehicleId))
                     {
-                        VehicleNeedsManager.CreateParkedVehicleNeeds(parkedVehicleId, ownerId, fuelAmount, fuelCapacity, dirtPercentage, wearPercentage, isBroken, isOutOfFuel);
+                        var parkedVehicleNeeds = new VehicleNeedsManager.ParkedVehicleNeedsStruct
+                        {
+                            OwnerId = ownerId,
+                            FuelAmount = fuelAmount,
+                            FuelCapacity = fuelCapacity,
+                            DirtPercentage = dirtPercentage,
+                            WearPercentage = wearPercentage,
+                            FrameIndex = frameIndex,
+                            StateFlags = stateFlags
+                        };
+
+                        // Add to the manager
+                        VehicleNeedsManager.GetParkedVehiclesNeeds()[parkedVehicleId] = parkedVehicleNeeds;
                     }
 
                     CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);

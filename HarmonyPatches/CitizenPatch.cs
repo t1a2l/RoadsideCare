@@ -35,19 +35,8 @@ namespace RoadsideCare.HarmonyPatches
                                 OwnerId = citizenID,
                                 FuelAmount = parkedVehicleNeedsPair.Value.FuelAmount,
                                 FuelCapacity = parkedVehicleNeedsPair.Value.FuelCapacity,
-                                IsRefueling = false,
-                                IsGoingToRefuel = false,
                                 DirtPercentage = parkedVehicleNeedsPair.Value.DirtPercentage,
-                                IsAtTunnelWash = false,
-                                IsAtTunnelWashExit = false,
-                                IsGoingToTunnelWash = false,
-                                IsAtHandWash = false,
-                                IsGoingToHandWash = false,
-                                WearPercentage = parkedVehicleNeedsPair.Value.WearPercentage,
-                                IsBeingRepaired = false,
-                                IsGoingToGetRepaired = false,
-                                IsBroken = false,
-                                IsOutOfFuel = false
+                                WearPercentage = parkedVehicleNeedsPair.Value.WearPercentage
                             };
 
                             VehicleNeedsManager.SetNewVehicleNeeds(vehicleID, vehicleNeedsStruct);

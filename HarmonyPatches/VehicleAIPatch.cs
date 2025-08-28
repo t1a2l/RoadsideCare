@@ -27,8 +27,8 @@ namespace RoadsideCare.HarmonyPatches
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
                 if (__instance is ExtendedCargoTruckAI || __instance is PassengerCarAI)
                 {
-                    bool isOnWayToCareCenter = vehicleNeeds.IsGoingToRefuel || vehicleNeeds.IsGoingToHandWash || vehicleNeeds.IsGoingToTunnelWash || vehicleNeeds.IsGoingToGetRepaired;
-                    bool isBeingCaredFor = vehicleNeeds.IsRefueling || vehicleNeeds.IsAtHandWash || vehicleNeeds.IsAtTunnelWash || vehicleNeeds.IsBeingRepaired;
+                    bool isOnWayToCareCenter = VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID) || VehicleNeedsManager.IsGoingToGetRepaired(vehicleID);
+                    bool isBeingCaredFor = VehicleNeedsManager.IsRefueling(vehicleID) || VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID) || VehicleNeedsManager.IsBeingRepaired(vehicleID);
 
                     if (!isBeingCaredFor && !isOnWayToCareCenter)
                     {
@@ -43,17 +43,17 @@ namespace RoadsideCare.HarmonyPatches
                         }
                     }
                 }
-                if (vehicleNeeds.FuelAmount > 0 && !vehicleNeeds.IsRefueling && !vehicleNeeds.IsAtHandWash && !vehicleNeeds.IsBeingRepaired)
+                if (vehicleNeeds.FuelAmount > 0 && !VehicleNeedsManager.IsRefueling(vehicleID) && !VehicleNeedsManager.IsAtHandWash(vehicleID) && !VehicleNeedsManager.IsBeingRepaired(vehicleID))
                 {
                     var newAmount = vehicleNeeds.FuelAmount - 0.01f;
                     VehicleNeedsManager.SetFuelAmount(vehicleID, newAmount);
                 }
-                if (vehicleNeeds.DirtPercentage < 100 && !vehicleNeeds.IsAtHandWash && !vehicleNeeds.IsAtTunnelWash)
+                if (vehicleNeeds.DirtPercentage < 100 && !VehicleNeedsManager.IsAtHandWash(vehicleID) && !VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
                     var newDirtPercentage = vehicleNeeds.DirtPercentage + 0.01f;
                     VehicleNeedsManager.SetDirtPercentage(vehicleID, newDirtPercentage);
                 }
-                //if (vehicleNeeds.WearPercentage < 100 && !vehicleNeeds.IsBeingRepaired)
+                //if (vehicleNeeds.WearPercentage < 100 && !VehicleNeedsManager.IsBeingRepaired(vehicleID))
                 //{
                 //    var newWearPercentage = vehicleNeeds.WearPercentage + 0.01f;
                 //    VehicleNeedsManager.SetWearPercentage(vehicleID, newWearPercentage);

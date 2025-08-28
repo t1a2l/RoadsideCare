@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ColossalFramework;
 using UnityEngine;
@@ -11,6 +12,9 @@ namespace RoadsideCare.Managers
 
         private static Dictionary<ushort, ParkedVehicleNeedsStruct> ParkedVehiclesNeeds;
 
+        // Reuse this list to avoid allocations during cleanup
+        private static readonly List<ushort> _tempStaleKeys = [];
+
         public struct VehicleNeedsStruct
         {
             public ushort OriginalTargetBuilding;
@@ -21,17 +25,16 @@ namespace RoadsideCare.Managers
             public float FuelAmount;
             public float FuelCapacity;
             public float FuelPerFrame;
-            public bool IsRefueling;
-            public bool IsGoingToRefuel;
 
             // dirt related
             public float DirtPercentage;
             public float DirtPerFrame;
-            public bool IsAtTunnelWash;
-            public bool IsAtTunnelWashExit;
-            public bool IsGoingToTunnelWash;
-            public bool IsAtHandWash;
-            public bool IsGoingToHandWash;
+
+            // wear related
+            public float WearPercentage;
+            public float WearPerFrame;
+
+            // Tunnel wash data
             public uint LastFrameIndex;
             public float TunnelWashSegmentLength;
             public float TunnelWashSegmentMaxSpeed;
@@ -45,15 +48,26 @@ namespace RoadsideCare.Managers
             public ushort TunnelWashStartNode;
             public ushort TunnelWashEndNode;
 
-            // wear related
-            public float WearPercentage;
-            public float WearPerFrame;
-            public bool IsBeingRepaired;
-            public bool IsGoingToGetRepaired;
+            public VehicleStateFlags StateFlags;
+        }
 
-            // car issues
-            public bool IsBroken;
-            public bool IsOutOfFuel;
+        [Flags]
+        public enum VehicleStateFlags : uint
+        {
+            None = 0,
+            IsRefueling = 1 << 0,
+            IsGoingToRefuel = 1 << 1,
+            IsAtTunnelWash = 1 << 2,
+            IsAtTunnelWashExit = 1 << 3,
+            IsGoingToTunnelWash = 1 << 4,
+            IsAtHandWash = 1 << 5,
+            IsGoingToHandWash = 1 << 6,
+            IsBeingRepaired = 1 << 7,
+            IsGoingToGetRepaired = 1 << 8,
+            IsBroken = 1 << 9,
+            IsOutOfFuel = 1 << 10,
+            TunnelWashIsForwardDirection = 1 << 11,
+            TunnelWashDirectionDetected = 1 << 12
         }
 
         public struct ParkedVehicleNeedsStruct
@@ -70,12 +84,19 @@ namespace RoadsideCare.Managers
             // wear related
             public float WearPercentage;
 
-            // car issues
-            public bool IsBroken;
-            public bool IsOutOfFuel;
-
             // cleanup frame
             public uint FrameIndex;
+
+            // Pack the few boolean flags
+            public ParkedVehicleStateFlags StateFlags;
+        }
+
+        [Flags]
+        public enum ParkedVehicleStateFlags : uint
+        {
+            None = 0,
+            IsBroken = 1 << 0,
+            IsOutOfFuel = 1 << 1
         }
 
         public static void Init()
@@ -86,8 +107,9 @@ namespace RoadsideCare.Managers
 
         public static void Deinit()
         {
-            VehiclesNeeds = [];
-            ParkedVehiclesNeeds = [];
+            VehiclesNeeds?.Clear();
+            ParkedVehiclesNeeds?.Clear();
+            _tempStaleKeys.Clear();
         }
 
         public static Dictionary<ushort, VehicleNeedsStruct> GetVehiclesNeeds() => VehiclesNeeds;
@@ -102,6 +124,37 @@ namespace RoadsideCare.Managers
 
         public static bool ParkedVehicleNeedsExist(ushort parkedVehicleId) => ParkedVehiclesNeeds.ContainsKey(parkedVehicleId);
 
+        // Helper methods for flag operations - makes the code cleaner
+        public static bool HasFlag(ushort vehicleId, VehicleStateFlags flag)
+        {
+            return VehiclesNeeds.TryGetValue(vehicleId, out var needs) && (needs.StateFlags & flag) != 0;
+        }
+
+        public static void SetFlag(ushort vehicleId, VehicleStateFlags flag, bool value = true)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
+            {
+                if (value)
+                    needs.StateFlags |= flag;
+                else
+                    needs.StateFlags &= ~flag;
+                VehiclesNeeds[vehicleId] = needs;
+            }
+        }
+
+        // Convenient property accessors using flags
+        public static bool IsRefueling(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsRefueling);
+        public static bool IsGoingToRefuel(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsGoingToRefuel);
+        public static bool IsAtTunnelWash(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsAtTunnelWash);
+        public static bool IsAtTunnelWashExit(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsAtTunnelWashExit);
+        public static bool IsGoingToTunnelWash(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsGoingToTunnelWash);
+        public static bool IsAtHandWash(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsAtHandWash);
+        public static bool IsGoingToHandWash(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsGoingToHandWash);
+        public static bool TunnelWashIsForwardDirection(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.TunnelWashIsForwardDirection);
+        public static bool TunnelWashDirectionDetected(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.TunnelWashDirectionDetected);
+        public static bool IsBeingRepaired(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsBeingRepaired);
+        public static bool IsGoingToGetRepaired(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsGoingToGetRepaired);
+
         public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float serviceTimer, float fuelAmount, 
             float fuelCapacity, float dirtPercentage, float wearPercenatge, uint lastFrameIndex = 0, float tunnelWashSegmentLength = 1, float tunnelWashSegmentMaxSpeed = 0, 
             float tunnelWashDistanceTraveled = 0, float tunnelWashDirtStartPercentage = 0, Vector3 tunnelWashStartPosition = default, byte tunnelWashEntryOffset = 0,
@@ -110,6 +163,23 @@ namespace RoadsideCare.Managers
             bool isAtTunnelWash = false, bool isAtTunnelWashExit = false, bool isGoingToTunnelWash = false, bool isAtHandWash = false, bool isGoingToHandWash = false, 
             bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
         {
+            var stateFlags = VehicleStateFlags.None;
+
+            // Pack all the boolean parameters into flags
+            if (isRefueling) stateFlags |= VehicleStateFlags.IsRefueling;
+            if (isGoingToRefuel) stateFlags |= VehicleStateFlags.IsGoingToRefuel;
+            if (isAtTunnelWash) stateFlags |= VehicleStateFlags.IsAtTunnelWash;
+            if (isAtTunnelWashExit) stateFlags |= VehicleStateFlags.IsAtTunnelWashExit;
+            if (isGoingToTunnelWash) stateFlags |= VehicleStateFlags.IsGoingToTunnelWash;
+            if (isAtHandWash) stateFlags |= VehicleStateFlags.IsAtHandWash;
+            if (isGoingToHandWash) stateFlags |= VehicleStateFlags.IsGoingToHandWash;
+            if (isBeingRepaired) stateFlags |= VehicleStateFlags.IsBeingRepaired;
+            if (isGoingToGetRepaired) stateFlags |= VehicleStateFlags.IsGoingToGetRepaired;
+            if (isBroken) stateFlags |= VehicleStateFlags.IsBroken;
+            if (isOutOfFuel) stateFlags |= VehicleStateFlags.IsOutOfFuel;
+            if (tunnelWashIsForwardDirection) stateFlags |= VehicleStateFlags.TunnelWashIsForwardDirection;
+            if (tunnelWashDirectionDetected) stateFlags |= VehicleStateFlags.TunnelWashDirectionDetected;
+
             var vehicleNeedsStruct = new VehicleNeedsStruct
             {
                 OriginalTargetBuilding = originalTargetBuilding,
@@ -118,15 +188,8 @@ namespace RoadsideCare.Managers
                 FuelAmount = fuelAmount,
                 FuelCapacity = fuelCapacity,
                 FuelPerFrame = fuelPerFrame,
-                IsRefueling = isRefueling,
-                IsGoingToRefuel = isGoingToRefuel,
                 DirtPercentage = dirtPercentage,
                 DirtPerFrame = dirtPerFrame,
-                IsAtTunnelWash = isAtTunnelWash,
-                IsAtTunnelWashExit = isAtTunnelWashExit,
-                IsGoingToTunnelWash = isGoingToTunnelWash,
-                IsAtHandWash = isAtHandWash,
-                IsGoingToHandWash = isGoingToHandWash,
                 LastFrameIndex = lastFrameIndex,
                 TunnelWashSegmentLength = tunnelWashSegmentLength,
                 TunnelWashSegmentMaxSpeed = tunnelWashSegmentMaxSpeed,
@@ -141,10 +204,7 @@ namespace RoadsideCare.Managers
                 TunnelWashEndNode = tunnelWashEndNode,
                 WearPercentage = wearPercenatge,
                 WearPerFrame = wearPerFrame,
-                IsBeingRepaired = isBeingRepaired,
-                IsGoingToGetRepaired = isGoingToGetRepaired,
-                IsBroken = isBroken,
-                IsOutOfFuel = isOutOfFuel
+                StateFlags = stateFlags
             };
 
             VehiclesNeeds.Add(vehicleId, vehicleNeedsStruct);
@@ -155,6 +215,10 @@ namespace RoadsideCare.Managers
         public static ParkedVehicleNeedsStruct CreateParkedVehicleNeeds(ushort parkedVehicleId, uint ownerId, float fuelAmount, float fuelCapacity, 
             float dirtPercentage, float wearPercenatge, bool isBroken = false, bool isOutOfFuel = false)
         {
+            var stateFlags = ParkedVehicleStateFlags.None;
+            if (isBroken) stateFlags |= ParkedVehicleStateFlags.IsBroken;
+            if (isOutOfFuel) stateFlags |= ParkedVehicleStateFlags.IsOutOfFuel;
+
             var parkedVehicleNeedsStruct = new ParkedVehicleNeedsStruct
             {
                 OwnerId = ownerId,
@@ -162,9 +226,8 @@ namespace RoadsideCare.Managers
                 FuelCapacity = fuelCapacity,
                 DirtPercentage = dirtPercentage,
                 WearPercentage = wearPercenatge,
-                IsBroken = isBroken,
-                IsOutOfFuel = isOutOfFuel,
-                FrameIndex = SimulationManager.instance.m_currentFrameIndex
+                FrameIndex = SimulationManager.instance.m_currentFrameIndex,
+                StateFlags = stateFlags
             };
 
             ParkedVehiclesNeeds.Add(parkedVehicleId, parkedVehicleNeedsStruct);
@@ -172,9 +235,10 @@ namespace RoadsideCare.Managers
             return parkedVehicleNeedsStruct;
         }
 
+        // Optimized cleanup - reuse list to avoid allocations
         public static void CleanupStaleParkedVehicleNeeds()
         {
-            var staleKeys = new List<ushort>();
+            _tempStaleKeys.Clear(); // Reuse the list
             var currentTime = SimulationManager.instance.m_currentFrameIndex;
             var staleThreshold = 300; // E.g., 300 frames, roughly 5 seconds
 
@@ -189,20 +253,20 @@ namespace RoadsideCare.Managers
                     // Check if the entry is too old based on frame index
                     if (currentTime - entry.Value.FrameIndex > staleThreshold)
                     {
-                        staleKeys.Add(entry.Key);
+                        _tempStaleKeys.Add(entry.Key);
                         continue; // Move to the next entry
                     }
 
                     // Check if the citizen still exists
                     if (CitizenManager.instance.m_citizens.m_buffer[entry.Key].m_instance == 0)
                     {
-                        staleKeys.Add(entry.Key);
+                        _tempStaleKeys.Add(entry.Key);
                     }
                 }      
             }
 
             // Remove the stale entries
-            foreach (var key in staleKeys)
+            foreach (var key in _tempStaleKeys)
             {
                 RemoveParkedVehicleNeeds(key);
             }
@@ -210,23 +274,21 @@ namespace RoadsideCare.Managers
 
         public static void RemoveVehicleNeeds(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var _))
-            {
-                VehiclesNeeds.Remove(vehicleId);
-            }
+            VehiclesNeeds.Remove(vehicleId);
         }
 
         public static void RemoveParkedVehicleNeeds(ushort parkedVehicleId)
         {
-            if (ParkedVehiclesNeeds.TryGetValue(parkedVehicleId, out var _))
-            {
-                ParkedVehiclesNeeds.Remove(parkedVehicleId);
-            }
+            ParkedVehiclesNeeds.Remove(parkedVehicleId);
         }
 
         public static KeyValuePair<ushort, VehicleNeedsStruct> FindVehicleWithNoOwner(ushort vehicleId)
         {
-            return VehiclesNeeds.FirstOrDefault(item => item.Key == vehicleId && item.Value.OwnerId == 0);
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs) && needs.OwnerId == 0)
+            {
+                return new KeyValuePair<ushort, VehicleNeedsStruct>(vehicleId, needs);
+            }
+            return default;
         }
 
         public static KeyValuePair<ushort, ParkedVehicleNeedsStruct> FindParkedVehicleOwner(uint ownerId)
@@ -236,29 +298,26 @@ namespace RoadsideCare.Managers
 
         public static void SetNewVehicleNeeds(ushort vehicleId, VehicleNeedsStruct vehicleNeeds)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var _))
-            {
-                VehiclesNeeds[vehicleId] = vehicleNeeds;
-            }
+            VehiclesNeeds[vehicleId] = vehicleNeeds;
         }
 
         // Original target building related methods
 
         public static void SetOriginalTargetBuilding(ushort vehicleId, ushort originalTargetBuilding)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.OriginalTargetBuilding = originalTargetBuilding;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.OriginalTargetBuilding = originalTargetBuilding;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetServiceTimer(ushort vehicleId, float serviceTimer)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.ServiceTimer = serviceTimer;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.ServiceTimer = serviceTimer;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
@@ -266,240 +325,173 @@ namespace RoadsideCare.Managers
 
         public static void SetFuelAmount(ushort vehicleId, float fuelAmount)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.FuelAmount = fuelAmount;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.FuelAmount = fuelAmount;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetFuelPerFrame(ushort vehicleId, float fuelPerFrame)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.FuelPerFrame = fuelPerFrame;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.FuelPerFrame = fuelPerFrame;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetIsGoingToRefuelMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.IsGoingToRefuel = true;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
+            SetFlag(vehicleId, VehicleStateFlags.IsGoingToRefuel, true);
         }
 
         public static void SetIsRefuelingMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsRefueling = true;
-                vehicleNeedsStruct.IsGoingToRefuel = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.StateFlags |= VehicleStateFlags.IsRefueling;
+                needs.StateFlags &= ~VehicleStateFlags.IsGoingToRefuel;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
-        public static void SetIsOutOfFuelMode(ushort vehicleId)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.IsOutOfFuel = true;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
-
-        public static void ClearIsOutOfFuelMode(ushort vehicleId)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.IsOutOfFuel = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
 
         // Dirt related methods
 
         public static void SetDirtPercentage(ushort vehicleId, float dirtPercentage)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.DirtPercentage = dirtPercentage;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.DirtPercentage = dirtPercentage;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetParkedDirtPercentage(ushort parkedId, float dirtPercentage)
         {
-            if (ParkedVehiclesNeeds.TryGetValue(parkedId, out var parkedVehicleNeedsStruct))
+            if (ParkedVehiclesNeeds.TryGetValue(parkedId, out var parkedNeeds))
             {
-                parkedVehicleNeedsStruct.DirtPercentage = dirtPercentage;
-                ParkedVehiclesNeeds[parkedId] = parkedVehicleNeedsStruct;
+                parkedNeeds.DirtPercentage = dirtPercentage;
+                ParkedVehiclesNeeds[parkedId] = parkedNeeds;
             }
         }
 
         public static void SetDirtPerFrame(ushort vehicleId, float dirtPerFrame)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.DirtPerFrame = dirtPerFrame;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.DirtPerFrame = dirtPerFrame;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetIsAtTunnelWashMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsAtTunnelWash = true;
-                vehicleNeedsStruct.IsGoingToTunnelWash = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.StateFlags |= VehicleStateFlags.IsAtTunnelWash;
+                needs.StateFlags &= ~VehicleStateFlags.IsGoingToTunnelWash;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetIsAtTunnelWashExitMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.IsAtTunnelWashExit = true;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
+            SetFlag(vehicleId, VehicleStateFlags.IsAtTunnelWashExit, true);
         }
 
         public static void SetIsGoingToTunnelWashMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.IsGoingToTunnelWash = true;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
+            SetFlag(vehicleId, VehicleStateFlags.IsGoingToTunnelWash, true);
         }
 
         public static void SetIsAtHandWashMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsAtHandWash = true;
-                vehicleNeedsStruct.IsGoingToHandWash = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.StateFlags |= VehicleStateFlags.IsAtHandWash;
+                needs.StateFlags &= ~VehicleStateFlags.IsGoingToHandWash;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetIsGoingToHandWashMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            SetFlag(vehicleId, VehicleStateFlags.IsGoingToHandWash, true);
+        }
+
+        public static void SetTunnelWashIsForwardDirection(ushort vehicleId, bool isForward)
+        {
+            SetFlag(vehicleId, VehicleStateFlags.TunnelWashIsForwardDirection, isForward);
+        }
+
+        public static void SetTunnelWashDirectionDetected(ushort vehicleId, bool detected)
+        {
+            SetFlag(vehicleId, VehicleStateFlags.TunnelWashDirectionDetected, detected);
+        }
+
+        // Tunnel wash property setters - keeping the same API
+        public static void SetTunnelWashSegmentLength(ushort vehicleId, float length)
+        {
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsGoingToHandWash = true;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.TunnelWashSegmentLength = length;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
-        public static void SetLastFrameIndex(ushort vehicleId, uint lastFrameIndex)
+        public static void SetTunnelWashStartPosition(ushort vehicleId, Vector3 position)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.LastFrameIndex = lastFrameIndex;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.TunnelWashStartPosition = position;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
-        public static void SetTunnelWashSegmentLength(ushort vehicleId, float tunnelWashSegmentLength)
+        public static void SetTunnelWashEntryOffset(ushort vehicleId, byte offset)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.TunnelWashSegmentLength = tunnelWashSegmentLength;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.TunnelWashEntryOffset = offset;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
-        public static void SetTunnelWashSegmentMaxSpeed(ushort vehicleId, float tunnelWashSegmentMaxSpeed)
+        public static void SetTunnelWashPreviousOffset(ushort vehicleId, byte offset)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.TunnelWashSegmentMaxSpeed = tunnelWashSegmentMaxSpeed;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.TunnelWashPreviousOffset = offset;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
-        public static void SetTunnelWashDistanceTraveled(ushort vehicleId, float tunnelWashDistanceTraveled)
+        public static void SetTunnelWashDirtStartPercentage(ushort vehicleId, float percentage)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.TunnelWashDistanceTraveled = tunnelWashDistanceTraveled;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.TunnelWashDirtStartPercentage = percentage;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
-        public static void SetTunnelWashDirtStartPercentage(ushort vehicleId, float tunnelWashDirtStartPercentage)
+        public static void SetTunnelWashStartNode(ushort vehicleId, ushort startNode)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.TunnelWashDirtStartPercentage = tunnelWashDirtStartPercentage;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.TunnelWashStartNode = startNode;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
-        public static void SetTunnelWashStartPosition(ushort vehicleId, Vector3 tunnelWashStartPosition)
+        public static void SetTunnelWashEndNode(ushort vehicleId, ushort endNode)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.TunnelWashStartPosition = tunnelWashStartPosition;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
-
-        public static void SetTunnelWashEntryOffset(ushort vehicleId, byte tunnelWashEntryOffset)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.TunnelWashEntryOffset = tunnelWashEntryOffset;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
-
-        public static void SetTunnelWashPreviousOffset(ushort vehicleId, byte tunnelWashPreviousOffset)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.TunnelWashPreviousOffset = tunnelWashPreviousOffset;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
-
-        public static void SetTunnelWashIsForwardDirection(ushort vehicleId, bool tunnelWashIsForwardDirection)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.TunnelWashIsForwardDirection = tunnelWashIsForwardDirection;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
-
-        public static void SetTunnelWashDirectionDetected(ushort vehicleId, bool tunnelWashDirectionDetected)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.TunnelWashDirectionDetected = tunnelWashDirectionDetected;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
-
-        public static void SetTunnelWashStartNode(ushort vehicleId, ushort tunnelWashStartNode)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.TunnelWashStartNode = tunnelWashStartNode;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
-            }
-        }
-
-        public static void SetTunnelWashEndNode(ushort vehicleId, ushort tunnelWashEndNode)
-        {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
-            {
-                vehicleNeedsStruct.TunnelWashEndNode = tunnelWashEndNode;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.TunnelWashEndNode = endNode;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
@@ -525,38 +517,38 @@ namespace RoadsideCare.Managers
 
         public static void SetIsGoingToGetRepairedMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsGoingToGetRepaired = true;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.StateFlags |= VehicleStateFlags.IsGoingToGetRepaired;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetIsBeingRepairedMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsBeingRepaired = true;
-                vehicleNeedsStruct.IsGoingToGetRepaired = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.StateFlags |= VehicleStateFlags.IsBeingRepaired;
+                needs.StateFlags &= ~VehicleStateFlags.IsGoingToGetRepaired;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void SetIsBrokenMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsBroken = true;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.StateFlags |= VehicleStateFlags.IsBroken;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void ClearIsBrokenMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsBroken = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                needs.StateFlags &= ~VehicleStateFlags.IsBroken;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
@@ -564,26 +556,32 @@ namespace RoadsideCare.Managers
 
         public static void ClearAtLocationMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsRefueling = false;
-                vehicleNeedsStruct.IsAtTunnelWash = false;
-                vehicleNeedsStruct.IsAtTunnelWashExit = false;
-                vehicleNeedsStruct.IsAtHandWash = false;
-                vehicleNeedsStruct.IsBeingRepaired = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                const VehicleStateFlags atLocationFlags =
+                    VehicleStateFlags.IsRefueling |
+                    VehicleStateFlags.IsAtTunnelWash |
+                    VehicleStateFlags.IsAtTunnelWashExit |
+                    VehicleStateFlags.IsAtHandWash |
+                    VehicleStateFlags.IsBeingRepaired;
+
+                needs.StateFlags &= ~atLocationFlags;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
         public static void ClearGoingToMode(ushort vehicleId)
         {
-            if (VehiclesNeeds.TryGetValue(vehicleId, out var vehicleNeedsStruct))
+            if (VehiclesNeeds.TryGetValue(vehicleId, out var needs))
             {
-                vehicleNeedsStruct.IsGoingToRefuel = false;
-                vehicleNeedsStruct.IsGoingToTunnelWash = false;
-                vehicleNeedsStruct.IsGoingToHandWash = false;
-                vehicleNeedsStruct.IsGoingToGetRepaired = false;
-                VehiclesNeeds[vehicleId] = vehicleNeedsStruct;
+                const VehicleStateFlags goingToFlags =
+                    VehicleStateFlags.IsGoingToRefuel |
+                    VehicleStateFlags.IsGoingToTunnelWash |
+                    VehicleStateFlags.IsGoingToHandWash |
+                    VehicleStateFlags.IsGoingToGetRepaired;
+
+                needs.StateFlags &= ~goingToFlags;
+                VehiclesNeeds[vehicleId] = needs;
             }
         }
 
