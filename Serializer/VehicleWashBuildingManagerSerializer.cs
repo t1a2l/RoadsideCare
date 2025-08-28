@@ -11,7 +11,7 @@ namespace RoadsideCare.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_WASH_BUILDING_MANAGER_DATA_VERSION = 2;
+        private const ushort iVEHICLE_WASH_BUILDING_MANAGER_DATA_VERSION = 1;
 
         public static void SaveData(FastList<byte> Data)
         {
@@ -62,12 +62,7 @@ namespace RoadsideCare.Serializer
 
                     List<ushort> vehicleWashLanes = StorageData.ReadUShortList(Data, ref iIndex);
 
-                    List<ushort> vehicleWashPoints = default;
-
-                    if (iVehicleWashBuildingManagerVersion >= 2)
-                    {
-                        vehicleWashPoints = StorageData.ReadUShortList(Data, ref iIndex);
-                    }
+                    List<ushort> vehicleWashPoints = StorageData.ReadUShortList(Data, ref iIndex);
 
                     if (!VehicleWashBuildingManager.VehicleWashBuildingExist(buildingId))
                     {

@@ -10,7 +10,7 @@ namespace RoadsideCare.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 2;
+        private const ushort iVEHICLE_NEEDS_MANAGER_DATA_VERSION = 1;
 
         public static void SaveData(FastList<byte> Data)
         {
@@ -137,95 +137,33 @@ namespace RoadsideCare.Serializer
                     float fuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
                     float fuelPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
-                    // Initialize boolean flags -will be overridden by flags if version >= 3
-                    bool isRefueling = false;
-                    bool isGoingToRefuel = false;
-                    bool isAtTunnelWash = false;
-                    bool isAtTunnelWashExit = false;
-                    bool isGoingToTunnelWash = false;
-                    bool isAtHandWash = false;
-                    bool isGoingToHandWash = false;
-                    bool tunnelWashIsForwardDirection = true;
-                    bool tunnelWashDirectionDetected = false;
-                    bool isGoingToGetRepaired = false;
-                    bool isBeingRepaired = false;
-                    bool isBroken = false;
-                    bool isOutOfFuel = false;
-
                     // Dirt related
                     float dirtPercentage = StorageData.ReadFloat(Data, ref iIndex);
                     float dirtPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
-                    uint lastFrameIndex = 0;
-                    float tunnelWashSegmentLength = 1;
-                    float tunnelWashSegmentMaxSpeed = 1;
-                    float tunnelWashDistanceTraveled = 1;
-                    float tunnelWashDirtStartPercentage = 1;
-                    float tunnelWashStartPosition_x = 0;
-                    float tunnelWashStartPosition_y = 0;
-                    float tunnelWashStartPosition_z = 0;
-                    byte tunnelWashEntryOffset = 0;
-                    byte tunnelWashPreviousOffset = 0;
-                    ushort tunnelWashStartNode = 0;
-                    ushort tunnelWashEndNode = 0;
+                    // Tunnel wash related
+                    uint lastFrameIndex = StorageData.ReadUInt32(Data, ref iIndex); ;
+                    float tunnelWashSegmentLength = StorageData.ReadFloat(Data, ref iIndex);
+                    float tunnelWashSegmentMaxSpeed = StorageData.ReadFloat(Data, ref iIndex);
+                    float tunnelWashDistanceTraveled = StorageData.ReadFloat(Data, ref iIndex);
+                    float tunnelWashDirtStartPercentage = StorageData.ReadFloat(Data, ref iIndex);
+                    float tunnelWashStartPosition_x = StorageData.ReadFloat(Data, ref iIndex);
+                    float tunnelWashStartPosition_y = StorageData.ReadFloat(Data, ref iIndex);
+                    float tunnelWashStartPosition_z = StorageData.ReadFloat(Data, ref iIndex);
+                    byte tunnelWashEntryOffset = StorageData.ReadByte(Data, ref iIndex);
+                    byte tunnelWashPreviousOffset = StorageData.ReadByte(Data, ref iIndex);
+                    ushort tunnelWashStartNode = StorageData.ReadUInt16(Data, ref iIndex);
+                    ushort tunnelWashEndNode = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    if (iVehicleNeedsManagerVersion >= 2)
-                    {
-                        lastFrameIndex = StorageData.ReadUInt32(Data, ref iIndex);
-
-                        tunnelWashSegmentLength = StorageData.ReadFloat(Data, ref iIndex);
-
-                        tunnelWashSegmentMaxSpeed = StorageData.ReadFloat(Data, ref iIndex);
-
-                        tunnelWashDistanceTraveled = StorageData.ReadFloat(Data, ref iIndex);
-
-                        tunnelWashDirtStartPercentage = StorageData.ReadFloat(Data, ref iIndex);
-
-                        tunnelWashStartPosition_x = StorageData.ReadFloat(Data, ref iIndex);
-
-                        tunnelWashStartPosition_y = StorageData.ReadFloat(Data, ref iIndex);
-
-                        tunnelWashStartPosition_z = StorageData.ReadFloat(Data, ref iIndex);
-
-                        tunnelWashEntryOffset = StorageData.ReadByte(Data, ref iIndex);
-
-                        tunnelWashPreviousOffset = StorageData.ReadByte(Data, ref iIndex);
-
-                        tunnelWashStartNode = StorageData.ReadUInt16(Data, ref iIndex);
-
-                        tunnelWashEndNode = StorageData.ReadUInt16(Data, ref iIndex);
-                    }
-
+                    // Flags related
                     Vector3 tunnelWashStartPosition = new(tunnelWashStartPosition_x, tunnelWashStartPosition_y, tunnelWashStartPosition_z);
 
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
                     float wearPerFrame = StorageData.ReadFloat(Data, ref iIndex);
 
-                    // NEW: Read packed flags for version 3+
-                    VehicleNeedsManager.VehicleStateFlags stateFlags = VehicleNeedsManager.VehicleStateFlags.None;
-                    if (iVehicleNeedsManagerVersion >= 3)
-                    {
-                        stateFlags = (VehicleNeedsManager.VehicleStateFlags)StorageData.ReadUInt32(Data, ref iIndex);
-                    }
-                    else
-                    {
-                        // Convert individual booleans to flags (for legacy compatibility)
-                        if (isRefueling) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsRefueling;
-                        if (isGoingToRefuel) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToRefuel;
-                        if (isAtTunnelWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsAtTunnelWash;
-                        if (isAtTunnelWashExit) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsAtTunnelWashExit;
-                        if (isGoingToTunnelWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToTunnelWash;
-                        if (isAtHandWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsAtHandWash;
-                        if (isGoingToHandWash) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToHandWash;
-                        if (isBeingRepaired) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsBeingRepaired;
-                        if (isGoingToGetRepaired) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsGoingToGetRepaired;
-                        if (isBroken) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsBroken;
-                        if (isOutOfFuel) stateFlags |= VehicleNeedsManager.VehicleStateFlags.IsOutOfFuel;
-                        if (tunnelWashIsForwardDirection) stateFlags |= VehicleNeedsManager.VehicleStateFlags.TunnelWashIsForwardDirection;
-                        if (tunnelWashDirectionDetected) stateFlags |= VehicleNeedsManager.VehicleStateFlags.TunnelWashDirectionDetected;
-                    }
-
+                    VehicleNeedsManager.VehicleStateFlags stateFlags = (VehicleNeedsManager.VehicleStateFlags)StorageData.ReadUInt32(Data, ref iIndex);
+ 
                     if (!VehicleNeedsManager.VehicleNeedsExist(vehicleId))
                     {
                         // Create the vehicle needs using the new method signature
@@ -283,11 +221,7 @@ namespace RoadsideCare.Serializer
                     // Wear related
                     float wearPercentage = StorageData.ReadFloat(Data, ref iIndex);
 
-                    uint frameIndex = 0;
-                    if (iVehicleNeedsManagerVersion >= 2)
-                    {
-                        frameIndex = StorageData.ReadUInt32(Data, ref iIndex);
-                    }
+                    uint frameIndex = StorageData.ReadUInt32(Data, ref iIndex);
 
                     VehicleNeedsManager.ParkedVehicleStateFlags stateFlags = (VehicleNeedsManager.ParkedVehicleStateFlags)StorageData.ReadUInt32(Data, ref iIndex);
 
