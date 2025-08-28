@@ -300,12 +300,12 @@ namespace RoadsideCare.HarmonyPatches
 
             var laneId = PathManager.GetLaneID(position);
 
-            CalculateSegmentPosition(instance, vehicleID, ref data, position, laneId, data.m_lastPathOffset, out var currentPosition, out var _, out var maxSpeed);
+            CalculateSegmentPosition(instance, vehicleID, ref data, position, laneId, data.m_lastPathOffset, out var currentPosition, out var _, out var _);
 
             var currentOffset = data.m_lastPathOffset;
 
             // Detect direction on first movement
-            if (!vehicleNeeds.TunnelWashDirectionDetected && data.m_lastPathOffset != vehicleNeeds.TunnelWashPreviousOffset)
+            if (!VehicleNeedsManager.TunnelWashDirectionDetected(vehicleID) && data.m_lastPathOffset != vehicleNeeds.TunnelWashPreviousOffset)
             {
                 DetectDirection(vehicleID, data.m_lastPathOffset);
                 VehicleNeedsManager.SetTunnelWashStartPosition(vehicleID, currentPosition);
@@ -426,7 +426,7 @@ namespace RoadsideCare.HarmonyPatches
         private static void DetectDirection(ushort vehicleID, byte currentOffset)
         {
             var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-            bool isForwardDirection = vehicleNeeds.TunnelWashIsForwardDirection;
+            bool isForwardDirection = false;
 
             // Check if offset wrapped around (0 to 255 or 255 to 0)
             int offsetDifference = currentOffset - vehicleNeeds.TunnelWashPreviousOffset;
@@ -487,7 +487,7 @@ namespace RoadsideCare.HarmonyPatches
 
             // Use offset only as debug info
             float offsetProgress = 0f;
-            if (vehicleNeeds.TunnelWashDirectionDetected)
+            if (VehicleNeedsManager.TunnelWashDirectionDetected(vehicleID))
             {
                 offsetProgress = CalculateOffsetProgress(vehicleID, currentOffset);
             }
@@ -505,7 +505,7 @@ namespace RoadsideCare.HarmonyPatches
             float totalDistance;
             float currentDistance;
 
-            if (vehicleNeeds.TunnelWashIsForwardDirection)
+            if (VehicleNeedsManager.TunnelWashIsForwardDirection(vehicleID))
             {
                 // Forward: calculate how far we can go from entry point
                 // Handle wraparound case

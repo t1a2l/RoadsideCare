@@ -18,6 +18,15 @@ namespace RoadsideCare.HarmonyPatches
             CreateOrUpdateSegmentToARoadCareBuilding(segment);
         }
 
+        [HarmonyPatch(typeof(NetManager), "UpdateSegment",
+           [typeof(ushort), typeof(ushort), typeof(int)],
+           [ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
+        [HarmonyPostfix]
+        public static void UpdateSegment(ushort segment, ushort fromNode, int level)
+        {
+            CreateOrUpdateSegmentToARoadCareBuilding(segment);
+        }
+
         [HarmonyPatch(typeof(NetManager), "ReleaseSegment")]
         [HarmonyPostfix]
         public static void ReleaseSegment(ushort segment, bool keepNodes)

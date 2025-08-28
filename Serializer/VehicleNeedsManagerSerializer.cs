@@ -61,8 +61,6 @@ namespace RoadsideCare.Serializer
                 StorageData.WriteFloat(kvp.Value.TunnelWashStartPosition.z, Data);
                 StorageData.WriteByte(kvp.Value.TunnelWashEntryOffset, Data);
                 StorageData.WriteByte(kvp.Value.TunnelWashPreviousOffset, Data);
-                StorageData.WriteBool(kvp.Value.TunnelWashIsForwardDirection, Data);
-                StorageData.WriteBool(kvp.Value.TunnelWashDirectionDetected, Data);
                 StorageData.WriteUInt16(kvp.Value.TunnelWashStartNode, Data);
                 StorageData.WriteUInt16(kvp.Value.TunnelWashEndNode, Data);
 

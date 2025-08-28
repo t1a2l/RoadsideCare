@@ -43,8 +43,6 @@ namespace RoadsideCare.Managers
             public Vector3 TunnelWashStartPosition;
             public byte TunnelWashEntryOffset;
             public byte TunnelWashPreviousOffset;
-            public bool TunnelWashIsForwardDirection;
-            public bool TunnelWashDirectionDetected;
             public ushort TunnelWashStartNode;
             public ushort TunnelWashEndNode;
 
@@ -156,30 +154,8 @@ namespace RoadsideCare.Managers
         public static bool IsGoingToGetRepaired(ushort vehicleId) => HasFlag(vehicleId, VehicleStateFlags.IsGoingToGetRepaired);
 
         public static VehicleNeedsStruct CreateVehicleNeeds(ushort vehicleId, ushort originalTargetBuilding, uint ownerId, float serviceTimer, float fuelAmount, 
-            float fuelCapacity, float dirtPercentage, float wearPercenatge, uint lastFrameIndex = 0, float tunnelWashSegmentLength = 1, float tunnelWashSegmentMaxSpeed = 0, 
-            float tunnelWashDistanceTraveled = 0, float tunnelWashDirtStartPercentage = 0, Vector3 tunnelWashStartPosition = default, byte tunnelWashEntryOffset = 0,
-            byte tunnelWashPreviousOffset = 0, bool tunnelWashIsForwardDirection = true, bool tunnelWashDirectionDetected = false, ushort tunnelWashStartNode = 0,
-            ushort tunnelWashEndNode = 0, float fuelPerFrame = 0, float dirtPerFrame = 0, float wearPerFrame = 0, bool isRefueling = false, bool isGoingToRefuel = false, 
-            bool isAtTunnelWash = false, bool isAtTunnelWashExit = false, bool isGoingToTunnelWash = false, bool isAtHandWash = false, bool isGoingToHandWash = false, 
-            bool isBeingRepaired = false, bool isGoingToGetRepaired = false, bool isBroken = false, bool isOutOfFuel = false)
+            float fuelCapacity, float dirtPercentage, float wearPercenatge)
         {
-            var stateFlags = VehicleStateFlags.None;
-
-            // Pack all the boolean parameters into flags
-            if (isRefueling) stateFlags |= VehicleStateFlags.IsRefueling;
-            if (isGoingToRefuel) stateFlags |= VehicleStateFlags.IsGoingToRefuel;
-            if (isAtTunnelWash) stateFlags |= VehicleStateFlags.IsAtTunnelWash;
-            if (isAtTunnelWashExit) stateFlags |= VehicleStateFlags.IsAtTunnelWashExit;
-            if (isGoingToTunnelWash) stateFlags |= VehicleStateFlags.IsGoingToTunnelWash;
-            if (isAtHandWash) stateFlags |= VehicleStateFlags.IsAtHandWash;
-            if (isGoingToHandWash) stateFlags |= VehicleStateFlags.IsGoingToHandWash;
-            if (isBeingRepaired) stateFlags |= VehicleStateFlags.IsBeingRepaired;
-            if (isGoingToGetRepaired) stateFlags |= VehicleStateFlags.IsGoingToGetRepaired;
-            if (isBroken) stateFlags |= VehicleStateFlags.IsBroken;
-            if (isOutOfFuel) stateFlags |= VehicleStateFlags.IsOutOfFuel;
-            if (tunnelWashIsForwardDirection) stateFlags |= VehicleStateFlags.TunnelWashIsForwardDirection;
-            if (tunnelWashDirectionDetected) stateFlags |= VehicleStateFlags.TunnelWashDirectionDetected;
-
             var vehicleNeedsStruct = new VehicleNeedsStruct
             {
                 OriginalTargetBuilding = originalTargetBuilding,
@@ -187,24 +163,8 @@ namespace RoadsideCare.Managers
                 ServiceTimer = serviceTimer,
                 FuelAmount = fuelAmount,
                 FuelCapacity = fuelCapacity,
-                FuelPerFrame = fuelPerFrame,
                 DirtPercentage = dirtPercentage,
-                DirtPerFrame = dirtPerFrame,
-                LastFrameIndex = lastFrameIndex,
-                TunnelWashSegmentLength = tunnelWashSegmentLength,
-                TunnelWashSegmentMaxSpeed = tunnelWashSegmentMaxSpeed,
-                TunnelWashDistanceTraveled = tunnelWashDistanceTraveled,
-                TunnelWashDirtStartPercentage = tunnelWashDirtStartPercentage,
-                TunnelWashStartPosition = tunnelWashStartPosition,
-                TunnelWashEntryOffset = tunnelWashEntryOffset,
-                TunnelWashPreviousOffset = tunnelWashPreviousOffset,
-                TunnelWashIsForwardDirection = tunnelWashIsForwardDirection,
-                TunnelWashDirectionDetected = tunnelWashDirectionDetected,
-                TunnelWashStartNode = tunnelWashStartNode,
-                TunnelWashEndNode = tunnelWashEndNode,
-                WearPercentage = wearPercenatge,
-                WearPerFrame = wearPerFrame,
-                StateFlags = stateFlags
+                WearPercentage = wearPercenatge
             };
 
             VehiclesNeeds.Add(vehicleId, vehicleNeedsStruct);
