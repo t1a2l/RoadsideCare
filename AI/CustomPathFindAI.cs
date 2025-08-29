@@ -190,11 +190,11 @@ namespace RoadsideCare.AI
             foreach (ushort point in vehicleWashBuilding.VehicleWashPoints)
             {
                 var netAI = NetManager.instance.m_segments.m_buffer[point].Info.m_netAI;
-                if (vehicleData.Info.GetAI() is PassengerCarAI && (netAI is VehicleWashPointSmallAI || netAI is VehicleWashPointAI))
+                if (vehicleData.Info.GetAI() is PassengerCarAI && vehicleData.Info.m_class.m_level == ItemClass.Level.Level1 && (netAI is VehicleWashPointSmallAI || netAI is VehicleWashPointAI))
                 {
                     vehicleWashPoints.Add(point);
                 }
-                else if (vehicleData.Info.GetAI() is ExtendedCargoTruckAI && (netAI is VehicleWashPointLargeAI || netAI is VehicleWashPointAI))
+                else if ((vehicleData.Info.GetAI() is PassengerCarAI && vehicleData.Info.m_class.m_level == ItemClass.Level.Level2 || vehicleData.Info.GetAI() is ExtendedCargoTruckAI) && (netAI is VehicleWashPointLargeAI || netAI is VehicleWashPointAI))
                 {
                     vehicleWashPoints.Add(point);
                 }
@@ -232,11 +232,11 @@ namespace RoadsideCare.AI
             foreach (ushort point in vehicleWashBuilding.VehicleWashLanes)
             {
                 var netAI = NetManager.instance.m_segments.m_buffer[point].Info.m_netAI;
-                if (vehicleData.Info.GetAI() is PassengerCarAI && (netAI is VehicleWashLaneSmallAI || netAI is VehicleWashLaneAI))
+                if (vehicleData.Info.GetAI() is PassengerCarAI && vehicleData.Info.m_class.m_level == ItemClass.Level.Level1 && (netAI is VehicleWashLaneSmallAI || netAI is VehicleWashLaneAI))
                 {
                     vehicleWashLanes.Add(point);
                 }
-                else if (vehicleData.Info.GetAI() is ExtendedCargoTruckAI && (netAI is VehicleWashLaneLargeAI || netAI is VehicleWashLaneAI))
+                else if ((vehicleData.Info.GetAI() is PassengerCarAI && vehicleData.Info.m_class.m_level == ItemClass.Level.Level2 || vehicleData.Info.GetAI() is ExtendedCargoTruckAI) && (netAI is VehicleWashLaneLargeAI || netAI is VehicleWashLaneAI))
                 {
                     vehicleWashLanes.Add(point);
                 }
