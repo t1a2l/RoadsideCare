@@ -47,9 +47,12 @@ namespace RoadsideCare.HarmonyPatches
                     if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
-                        gasStation.FuelPoints.Add(segmentID);
-                        GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
-                        break;
+                        if (!gasStation.FuelPoints.Contains(segmentID))
+                        {
+                            gasStation.FuelPoints.Add(segmentID);
+                            GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
+                            break;
+                        }
                     }
                 }
 
@@ -65,9 +68,12 @@ namespace RoadsideCare.HarmonyPatches
                     if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
-                        vehicleWashBuilding.VehicleWashLanes.Add(segmentID);
-                        VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
-                        break;
+                        if (!vehicleWashBuilding.VehicleWashLanes.Contains(segmentID))
+                        {
+                            vehicleWashBuilding.VehicleWashLanes.Add(segmentID);
+                            VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
+                            break;
+                        }  
                     }
                 }
                 return;
@@ -82,9 +88,12 @@ namespace RoadsideCare.HarmonyPatches
                     if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
-                        vehicleWashBuilding.VehicleWashPoints.Add(segmentID);
-                        VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
-                        break;
+                        if (!vehicleWashBuilding.VehicleWashPoints.Contains(segmentID))
+                        {
+                            vehicleWashBuilding.VehicleWashPoints.Add(segmentID);
+                            VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
+                            break;
+                        }  
                     }
                 }
                 return;
