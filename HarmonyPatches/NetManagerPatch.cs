@@ -38,7 +38,7 @@ namespace RoadsideCare.HarmonyPatches
         {
             var segment = NetManager.instance.m_segments.m_buffer[segmentID];
 
-            if (segment.Info.m_netAI is FuelPointAI && segment.Info.m_netAI is FuelPointSmallAI && segment.Info.m_netAI is FuelPointLargeAI)
+            if (segment.Info.m_netAI is FuelPointAI || segment.Info.m_netAI is FuelPointSmallAI || segment.Info.m_netAI is FuelPointLargeAI)
             {
                 var gasStationBuildings = GasStationManager.GetGasStationBuildings();
 
@@ -55,7 +55,6 @@ namespace RoadsideCare.HarmonyPatches
                         }
                     }
                 }
-
                 return;
             }
 
