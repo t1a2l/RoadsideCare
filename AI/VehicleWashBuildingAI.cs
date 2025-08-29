@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
@@ -198,7 +199,7 @@ namespace RoadsideCare.AI
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
                 }
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-                if (buildingData.m_fireIntensity == 0 && buildingData.m_waterBuffer > 0)
+                if (buildingData.m_fireIntensity == 0)
                 {
                     ExtendedTransferManager.Offer offer = default;
                     offer.Building = buildingID;
@@ -279,6 +280,8 @@ namespace RoadsideCare.AI
                     vehicleWashBuilding.VehicleWashPoints.Remove(seg);
                 }
 
+                vehicleWashBuilding.VehicleWashPoints = [.. vehicleWashBuilding.VehicleWashPoints.Distinct()];
+
                 VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
             }
         }
@@ -309,6 +312,8 @@ namespace RoadsideCare.AI
                 {
                     vehicleWashBuilding.VehicleWashLanes.Remove(seg);
                 }
+
+                vehicleWashBuilding.VehicleWashLanes = [.. vehicleWashBuilding.VehicleWashLanes.Distinct()];
 
                 VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
             }
