@@ -1,6 +1,7 @@
-﻿using RoadsideCare.Managers;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using RoadsideCare.Managers;
 using UnityEngine;
 
 namespace RoadsideCare.Serializer
@@ -36,6 +37,8 @@ namespace RoadsideCare.Serializer
 
                 StorageData.WriteUShortList(kvp.Value.VehicleWashPoints, Data);
 
+                Debug.Log($"VehicleWashBuildingManager SaveData: Building {kvp.Key} vehicleWashLanes {string.Join(",", [.. kvp.Value.VehicleWashLanes.Select(x => x.ToString())])} vehicleWashPoints {string.Join(",", [.. kvp.Value.VehicleWashPoints.Select(x => x.ToString())])}");
+
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
             }
@@ -63,6 +66,8 @@ namespace RoadsideCare.Serializer
                     List<ushort> vehicleWashLanes = StorageData.ReadUShortList(Data, ref iIndex);
 
                     List<ushort> vehicleWashPoints = StorageData.ReadUShortList(Data, ref iIndex);
+
+                    Debug.Log($"VehicleWashBuildingManager LoadData: Building {buildingId} vehicleWashLanes {string.Join(",", [.. vehicleWashLanes.Select(x => x.ToString())])} vehicleWashPoints {string.Join(",", [.. vehicleWashPoints.Select(x => x.ToString())])}");
 
                     if (!VehicleWashBuildingManager.VehicleWashBuildingExist(buildingId))
                     {

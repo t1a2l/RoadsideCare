@@ -1,6 +1,8 @@
-﻿using RoadsideCare.Managers;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using RoadsideCare.AI;
+using RoadsideCare.Managers;
 using UnityEngine;
 
 namespace RoadsideCare.Serializer
@@ -35,6 +37,8 @@ namespace RoadsideCare.Serializer
                 StorageData.WriteInt32(kvp.Value.FuelAmount, Data);
                 StorageData.WriteUShortList(kvp.Value.FuelPoints, Data);
 
+                Debug.Log($"GasStationManager SaveData: Building {kvp.Key} FuelAmount {kvp.Value.FuelAmount} FuelPoints {string.Join(",", [.. kvp.Value.FuelPoints.Select(x => x.ToString())])}");
+
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
             }
@@ -62,6 +66,8 @@ namespace RoadsideCare.Serializer
                     int fuelAmount = StorageData.ReadInt32(Data, ref iIndex);
 
                     List<ushort> fuelPoints = StorageData.ReadUShortList(Data, ref iIndex);
+
+                    Debug.Log($"GasStationManager LoadData: Building {buildingId} fuelAmount {fuelAmount} fuelPoints {string.Join(",", [.. fuelPoints.Select(x => x.ToString())])}");
 
                     if (!GasStationManager.GasStationBuildingExist(buildingId))
                     {
