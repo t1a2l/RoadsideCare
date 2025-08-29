@@ -115,12 +115,12 @@ namespace RoadsideCare.Serializer
                     VehicleNeedsManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
 
-                    // Vehicles Needs settings
+                    // Gas Stations settings
                     StorageData.WriteUInt32(uiTUPLE_START, Data);
                     GasStationManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
 
-                    // Vehicles Needs settings
+                    // Vehicle Wash Buildings settings
                     StorageData.WriteUInt32(uiTUPLE_START, Data);
                     VehicleWashBuildingManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
