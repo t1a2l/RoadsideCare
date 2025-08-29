@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
@@ -265,9 +266,6 @@ namespace RoadsideCare.AI
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
                 var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                 int missingFuel = m_fuelCapacity - gasStation.FuelAmount;
-
-                Debug.Log($"GasPumpAI: Building {buildingID} has {gasStation.FuelAmount} liters of fuel out of {m_fuelCapacity}, missing {missingFuel} liters.");
-
                 if (buildingData.m_fireIntensity == 0)
                 {
                     if (missingFuel > m_fuelCapacity * 0.8)
@@ -374,6 +372,8 @@ namespace RoadsideCare.AI
                 {
                     gasStation.FuelPoints.Remove(seg);
                 }
+
+                gasStation.FuelPoints = [.. gasStation.FuelPoints.Distinct()];
 
                 GasStationManager.SetFuelPoints(buildingID, gasStation.FuelPoints);
             }

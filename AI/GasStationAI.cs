@@ -637,9 +637,6 @@ namespace RoadsideCare.AI
                 {
                     var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                     int missingFuel = m_fuelCapacity - gasStation.FuelAmount;
-
-                    Debug.Log($"GasStationAI: Building {buildingID} has {gasStation.FuelAmount} liters of fuel out of {m_fuelCapacity}, missing {missingFuel} liters.");
-
                     if (buildingData.m_fireIntensity == 0)
                     {
                         if (missingFuel > m_fuelCapacity * 0.8)
