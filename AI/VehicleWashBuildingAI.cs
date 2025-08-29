@@ -198,14 +198,14 @@ namespace RoadsideCare.AI
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
                 }
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-                if (buildingData.m_fireIntensity == 0)
+                if (buildingData.m_fireIntensity == 0 && buildingData.m_waterBuffer > 0)
                 {
                     ExtendedTransferManager.Offer offer = default;
                     offer.Building = buildingID;
                     offer.Position = buildingData.m_position;
                     offer.Amount = 1;
                     offer.Active = false;
-                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource, offer);
+                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(m_outgoingResource, offer);
                 }
                 RefreshVehicleWashPoints(buildingID);
                 RefreshVehicleWashLanes(buildingID);

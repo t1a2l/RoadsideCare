@@ -103,11 +103,11 @@ namespace RoadsideCare.HarmonyPatches
                 offer.Active = true;
                 if (data.Info.m_vehicleAI is ExtendedCargoTruckAI extendedCargoTruckAI && extendedCargoTruckAI.m_isElectric)
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleFuelElectric, offer);
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuelElectric, offer);
                 }
                 else
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleFuel, offer);
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuel, offer);
                 }
                 return;
             }
@@ -121,7 +121,7 @@ namespace RoadsideCare.HarmonyPatches
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
+                Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
                 return;
             }
 
@@ -144,7 +144,7 @@ namespace RoadsideCare.HarmonyPatches
             //    {
             //        transferReason = ExtendedTransferManager.TransferReason.VehicleLargeMinorRepair;
             //    }
-            //    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(transferReason, offer);
+            //    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(transferReason, offer);
             //}
         }
 
@@ -163,11 +163,11 @@ namespace RoadsideCare.HarmonyPatches
                 bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                 if (isElectric)
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleFuelElectric, offer);
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuelElectric, offer);
                 }
                 else
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleFuel, offer);
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuel, offer);
                 }
                 return;
             }
@@ -181,7 +181,7 @@ namespace RoadsideCare.HarmonyPatches
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
+                Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
                 return;
             }
 
@@ -204,7 +204,7 @@ namespace RoadsideCare.HarmonyPatches
             //    {
             //        transferReason = ExtendedTransferManager.TransferReason.VehicleSmallMinorRepair;
             //    }
-            //    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(transferReason, offer);
+            //    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(transferReason, offer);
             //}
         }
 

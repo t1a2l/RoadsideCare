@@ -637,6 +637,9 @@ namespace RoadsideCare.AI
                 {
                     var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                     int missingFuel = m_fuelCapacity - gasStation.FuelAmount;
+
+                    Debug.Log($"GasStationAI: Building {buildingID} has {gasStation.FuelAmount} liters of fuel out of {m_fuelCapacity}, missing {missingFuel} liters.");
+
                     if (buildingData.m_fireIntensity == 0)
                     {
                         if (missingFuel > m_fuelCapacity * 0.8)
@@ -656,7 +659,7 @@ namespace RoadsideCare.AI
                             offer.Position = buildingData.m_position;
                             offer.Amount = 1;
                             offer.Active = false;
-                            Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource1, offer);
+                            Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(m_outgoingResource1, offer);
                         }
                     }
 
@@ -667,7 +670,7 @@ namespace RoadsideCare.AI
                         offer.Position = buildingData.m_position;
                         offer.Amount = 1;
                         offer.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer);
+                        Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(m_outgoingResource2, offer);
                     }
                 }
             }
