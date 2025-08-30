@@ -76,7 +76,11 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var original_targetBuilding = data.m_targetBuilding;
-
+                if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+                {
+                    original_targetBuilding = data.m_sourceBuilding;
+                }
+                    
                 VehicleNeedsManager.SetOriginalTargetBuilding(vehicleID, original_targetBuilding);
 
                 data.m_targetBuilding = targetBuilding;
