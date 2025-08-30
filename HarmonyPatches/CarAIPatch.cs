@@ -486,13 +486,13 @@ namespace RoadsideCare.HarmonyPatches
             float distanceProgress = distanceFromEntry / totalDistanceToTravel;
 
             // Use offset only as debug info
-            float offsetProgress = 0f;
-            if (VehicleNeedsManager.TunnelWashDirectionDetected(vehicleID))
-            {
-                offsetProgress = CalculateOffsetProgress(vehicleID, currentOffset);
-            }
+            //float offsetProgress = 0f;
+            //if (VehicleNeedsManager.TunnelWashDirectionDetected(vehicleID))
+            //{
+            //    offsetProgress = CalculateOffsetProgress(vehicleID, currentOffset);
+            //}
 
-            Console.WriteLine($"Distance from entry: {distanceFromEntry:F2}m, Total to travel: {totalDistanceToTravel:F2}m, Progress: {distanceProgress:F2}, Offset Progress: {offsetProgress:F2}");
+            //Console.WriteLine($"Distance from entry: {distanceFromEntry:F2}m, Total to travel: {totalDistanceToTravel:F2}m, Progress: {distanceProgress:F2}, Offset Progress: {offsetProgress:F2}");
 
             return Math.Min(distanceProgress, 1.0f);
         }
