@@ -525,7 +525,6 @@ namespace RoadsideCare.AI
             if (finalProductionRate != 0)
             {
                 DistrictManager instance = Singleton<DistrictManager>.instance;
-                byte park = instance.GetPark(buildingData.m_position);
                 if (m_noiseAccumulation != 0)
                 {
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
@@ -622,7 +621,7 @@ namespace RoadsideCare.AI
                     int num22 = Mathf.Max(0, visitPlaceCount - totalVisitorCount);
                     if (num21 >= 100 && num22 > 0)
                     {
-                        TransferManager.TransferOffer offer2 = new TransferManager.TransferOffer
+                        TransferManager.TransferOffer offer2 = new()
                         {
                             Priority = Mathf.Max(1, num21 * 8 / goodsCapacity),
                             Building = buildingID,
