@@ -51,6 +51,8 @@ namespace RoadsideCare.Serializer
                 // Dirt related
                 StorageData.WriteFloat(kvp.Value.DirtPercentage, Data);
                 StorageData.WriteFloat(kvp.Value.DirtPerFrame, Data);
+
+                // Tunnel wash related
                 StorageData.WriteUInt32(kvp.Value.LastFrameIndex, Data);
                 StorageData.WriteFloat(kvp.Value.TunnelWashSegmentLength, Data);
                 StorageData.WriteFloat(kvp.Value.TunnelWashSegmentMaxSpeed, Data);
@@ -126,7 +128,7 @@ namespace RoadsideCare.Serializer
 
                     // Owner related
                     uint ownerId = StorageData.ReadUInt32(Data, ref iIndex);
-
+                     
                     // Service Timer related
                     float serviceTimer = StorageData.ReadFloat(Data, ref iIndex);
 
