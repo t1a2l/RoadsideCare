@@ -32,12 +32,12 @@ namespace RoadsideCare.HarmonyPatches
                 else if (VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
-                    __result = "Driving to car wash ";
+                    __result = "Driving to truck wash ";
                 }
                 else if (VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
                     target.Building = data.m_targetBuilding;
-                    __result = "Washing vehicle at car wash ";
+                    __result = "Washing vehicle at truck wash ";
                 }
                 else if (VehicleNeedsManager.IsGoingToGetRepaired(vehicleID))
                 {
@@ -67,6 +67,12 @@ namespace RoadsideCare.HarmonyPatches
             }
 
             var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI();
+
+            if ((buildingAI is GasStationAI || buildingAI is GasPumpAI) && data.m_transferType >= 200 && data.m_transferType != 255)
+            {
+                return true;
+            }
+
 
             if (buildingAI is not GasStationAI && buildingAI is not GasPumpAI && buildingAI is not VehicleWashBuildingAI && buildingAI is not RepairStationAI)
             {
