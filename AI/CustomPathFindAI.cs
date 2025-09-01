@@ -6,6 +6,7 @@ using HarmonyLib;
 using MoreTransferReasons.AI;
 using RoadsideCare.Managers;
 using UnityEngine;
+using static NetInfo;
 
 namespace RoadsideCare.AI
 {
@@ -249,12 +250,27 @@ namespace RoadsideCare.AI
 
             // Pick a random segment from the vehicle wash lanes
             ushort segmentId = vehicleWashLanes[Random.Range(0, vehicleWashLanes.Count)];
-            var laneId = NetManager.instance.m_segments.m_buffer[segmentId].m_lanes; // single lane index 0
+
+            var segment = NetManager.instance.m_segments.m_buffer[segmentId];
+
+            var laneId = segment.m_lanes; // single lane index 0
 
             if (laneId == 0) return false;
 
+            bool inverted = (segment.m_flags & NetSegment.Flags.Invert) != 0;
+
             // Get lane position for pathfinding target
-            targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(1f); // end of lane
+            if (!inverted)
+            {
+                // Vehicle approaching from start node
+                targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(1f); // end of lane
+            }
+            else
+            {
+                // Vehicle approaching from end node  
+                targetPos = NetManager.instance.m_lanes.m_buffer[laneId].CalculatePosition(0f); // start of lane
+            }
+
             VehicleNeedsManager.SetIsGoingToTunnelWashMode(vehicleID);
             return true;
         }
