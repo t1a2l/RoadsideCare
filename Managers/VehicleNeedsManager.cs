@@ -206,6 +206,12 @@ namespace RoadsideCare.Managers
             {
                 var citizenId = entry.Value.OwnerId;
 
+                if(citizenId == 0)
+                {
+                    _tempStaleKeys.Add(entry.Key);
+                    continue; // Move to the next entry
+                }
+
                 var NoParkedVehicle = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId].m_parkedVehicle == 0;
 
                 if(NoParkedVehicle)
@@ -218,7 +224,7 @@ namespace RoadsideCare.Managers
                     }
 
                     // Check if the citizen still exists
-                    if (CitizenManager.instance.m_citizens.m_buffer[entry.Key].m_instance == 0)
+                    if (CitizenManager.instance.m_citizens.m_buffer[citizenId].m_instance == 0)
                     {
                         _tempStaleKeys.Add(entry.Key);
                     }
