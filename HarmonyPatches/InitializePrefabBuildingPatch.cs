@@ -30,7 +30,7 @@ namespace RoadsideCare.HarmonyPatches
                         PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
                     }
                     else if ((__instance.name.ToLower().Contains("carwash") || __instance.name.ToLower().Contains("car wash") || __instance.name.ToLower().Contains("truckwash") 
-                        || __instance.name.ToLower().Contains("truck wash")) && __instance.GetAI() is not VehicleWashBuildingAI)
+                        || __instance.name.ToLower().Contains("truck wash") || __instance.name.ToLower().Contains("total wash")) && __instance.GetAI() is not VehicleWashBuildingAI)
                     {
                         var oldAI = __instance.GetComponent<PrefabAI>();
                         UnityEngine.Object.DestroyImmediate(oldAI);
