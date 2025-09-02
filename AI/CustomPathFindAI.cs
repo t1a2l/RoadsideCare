@@ -6,7 +6,6 @@ using HarmonyLib;
 using MoreTransferReasons.AI;
 using RoadsideCare.Managers;
 using UnityEngine;
-using static NetInfo;
 
 namespace RoadsideCare.AI
 {
