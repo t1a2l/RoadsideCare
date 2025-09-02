@@ -78,6 +78,7 @@ namespace RoadsideCare.Serializer
             }
 
             StorageData.WriteInt32(ParkedVehiclesNeeds.Count, Data);
+            Debug.Log("VehicleNeedsManager.ParkedVehiclesNeeds.Count: " + ParkedVehiclesNeeds.Count);
 
             foreach (var kvp in ParkedVehiclesNeeds)
             {
@@ -86,6 +87,9 @@ namespace RoadsideCare.Serializer
 
                 // Write actual settings
                 StorageData.WriteUInt16(kvp.Key, Data);
+
+                // Owner related
+                StorageData.WriteUInt32(kvp.Value.OwnerId, Data);
 
                 // Fuel related
                 StorageData.WriteFloat(kvp.Value.FuelAmount, Data);
@@ -96,6 +100,9 @@ namespace RoadsideCare.Serializer
 
                 // Wear related
                 StorageData.WriteFloat(kvp.Value.WearPercentage, Data);
+
+                // Frame index related
+                StorageData.WriteUInt32(kvp.Value.FrameIndex, Data);
 
                 // NEW: Write the packed flags as a single UInt32
                 StorageData.WriteUInt32((uint)kvp.Value.StateFlags, Data);
@@ -116,6 +123,7 @@ namespace RoadsideCare.Serializer
                 VehicleNeedsManager.Init();
 
                 int VehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
+                Debug.Log("VehicleNeedsManager.VehiclesNeeds.Count: " + VehiclesFuel_Count);
 
                 for (int i = 0; i < VehiclesFuel_Count; i++)
                 {
@@ -200,10 +208,11 @@ namespace RoadsideCare.Serializer
                 }
 
                 int ParkedVehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
+                Debug.Log("VehicleNeedsManager.ParkedVehiclesNeeds.Count: " + ParkedVehiclesFuel_Count);
 
                 for (int i = 0; i < ParkedVehiclesFuel_Count; i++)
                 {
-                    CheckStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
+                    CheckParkedStartTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
 
                     ushort parkedVehicleId = StorageData.ReadUInt16(Data, ref iIndex);
 
@@ -242,7 +251,7 @@ namespace RoadsideCare.Serializer
                         VehicleNeedsManager.GetParkedVehiclesNeeds()[parkedVehicleId] = parkedVehicleNeeds;
                     }
 
-                    CheckEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
+                    CheckParkedEndTuple($"Buffer({i})", iVehicleNeedsManagerVersion, Data, ref iIndex);
                 }
             }
         }
@@ -267,6 +276,30 @@ namespace RoadsideCare.Serializer
                 if (iTupleEnd != uiTUPLE_END)
                 {
                     throw new Exception($"VehiclesNeeds Buffer end tuple not found at: {sTupleLocation}");
+                }
+            }
+        }
+
+        private static void CheckParkedStartTuple(string sTupleLocation, int iDataVersion, byte[] Data, ref int iIndex)
+        {
+            if (iDataVersion >= 1)
+            {
+                uint iTupleStart = StorageData.ReadUInt32(Data, ref iIndex);
+                if (iTupleStart != uiTUPLE_START)
+                {
+                    throw new Exception($"ParkedVehiclesNeeds Buffer start tuple not found at: {sTupleLocation}");
+                }
+            }
+        }
+
+        private static void CheckParkedEndTuple(string sTupleLocation, int iDataVersion, byte[] Data, ref int iIndex)
+        {
+            if (iDataVersion >= 1)
+            {
+                uint iTupleEnd = StorageData.ReadUInt32(Data, ref iIndex);
+                if (iTupleEnd != uiTUPLE_END)
+                {
+                    throw new Exception($"ParkedVehiclesNeeds Buffer end tuple not found at: {sTupleLocation}");
                 }
             }
         }
