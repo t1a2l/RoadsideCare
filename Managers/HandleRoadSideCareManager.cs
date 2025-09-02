@@ -4,14 +4,13 @@ using HarmonyLib;
 using MoreTransferReasons;
 using MoreTransferReasons.AI;
 using RoadsideCare.AI;
-using RoadsideCare.Managers;
 using RoadsideCare.Utils;
 using UnityEngine;
 
-namespace RoadsideCare.HarmonyPatches
+namespace RoadsideCare.Managers
 {
     [HarmonyPatch]
-    public static class CarAIPatch
+    public static class HandleRoadSideCareManager
     {
         private const float SERVICE_DISTANCE_THRESHOLD = 80f;
         private const float PROXIMITY_THRESHOLD = 10f;
@@ -322,6 +321,8 @@ namespace RoadsideCare.HarmonyPatches
                 VehicleNeedsManager.SetDirtPercentage(vehicleID, 0);
             }
 
+            data.m_custom = 0;
+
             if (data.Info.GetAI() is PassengerCarAI)
             {
                 var citizenId = instance.GetOwnerID(vehicleID, ref data).Citizen;
@@ -358,7 +359,7 @@ namespace RoadsideCare.HarmonyPatches
         private static void CalculateSegmentPosition(VehicleAI v_instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position position, uint laneID, byte offset, out Vector3 pos, out Vector3 dir, out float maxSpeed)
         {
             NetManager instance = Singleton<NetManager>.instance;
-            instance.m_lanes.m_buffer[laneID].CalculatePositionAndDirection((float)(int)offset * 0.003921569f, out pos, out dir);
+            instance.m_lanes.m_buffer[laneID].CalculatePositionAndDirection(offset * 0.003921569f, out pos, out dir);
             NetInfo info = instance.m_segments.m_buffer[position.m_segment].Info;
             if (info.m_lanes != null && info.m_lanes.Length > position.m_lane)
             {
@@ -372,7 +373,7 @@ namespace RoadsideCare.HarmonyPatches
 
         private static float CalculateTargetSpeed(VehicleAI instance, ushort vehicleID, ref Vehicle data, NetInfo info, uint lane, float curve)
         {
-            float num = ((lane >= info.m_lanes.Length) ? 1f : info.m_lanes[lane].m_speedLimit);
+            float num = lane >= info.m_lanes.Length ? 1f : info.m_lanes[lane].m_speedLimit;
             if (num > 0.4f && (instance.vehicleCategory & VehicleInfo.VehicleCategory.RoadTransport) != 0 && !info.m_netAI.IsHighway() && !info.m_netAI.IsTunnel() && !info.IsPedestrianZoneOrPublicTransportRoad())
             {
                 Vector3 lastFramePosition = data.GetLastFramePosition();
@@ -481,7 +482,7 @@ namespace RoadsideCare.HarmonyPatches
                 if (currentOffset < vehicleNeeds.TunnelWashEntryOffset)
                 {
                     // Wrapped around (e.g., entry=250, current=10)
-                    totalDistance = (255 - vehicleNeeds.TunnelWashEntryOffset) + currentOffset;
+                    totalDistance = 255 - vehicleNeeds.TunnelWashEntryOffset + currentOffset;
                     currentDistance = totalDistance; // Already traveled the full distance
                 }
                 else
