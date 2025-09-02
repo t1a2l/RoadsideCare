@@ -46,7 +46,7 @@ namespace RoadsideCare.HarmonyPatches
             {
                 parkedVehicleId = ___m_InstanceID.ParkedVehicle;
                 vehicleInfo = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
-                var parkedVehicleNeeds = VehicleNeedsManager.GetParkedVehicleNeeds(vehicleId);
+                var parkedVehicleNeeds = VehicleNeedsManager.GetParkedVehicleNeeds(parkedVehicleId);
                 fuelValue = parkedVehicleNeeds.FuelAmount / parkedVehicleNeeds.FuelCapacity;
                 dirtValue = parkedVehicleNeeds.DirtPercentage / 100;
                 //wearValue = parkedVehicleNeeds.WearPercentage / 100;
