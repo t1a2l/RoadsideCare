@@ -206,29 +206,42 @@ namespace RoadsideCare.Managers
             {
                 var citizenId = entry.Value.OwnerId;
 
-                if(citizenId == 0)
+                // Check if the citizenId is valid at all before trying to access the buffer
+                if (citizenId == 0 || citizenId >= CitizenManager.instance.m_citizens.m_buffer.Length)
                 {
-                    _tempStaleKeys.Add(entry.Key);
-                    continue; // Move to the next entry
+                    _tempStaleKeys.Add(entry.Key); // The owner is invalid, so the entry is stale.
+                    continue;
                 }
 
-                var NoParkedVehicle = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId].m_parkedVehicle == 0;
+                // Now that we have a valid citizenId, we can safely access the buffer
+                ref var citizen = ref CitizenManager.instance.m_citizens.m_buffer[citizenId];
+                var parkedVehicleId = citizen.m_parkedVehicle;
 
-                if(NoParkedVehicle)
+                // Check if the citizen's parked vehicle ID is valid and belongs to them.
+                if (parkedVehicleId != 0)
                 {
-                    // Check if the entry is too old based on frame index
-                    if (currentTime - entry.Value.FrameIndex > staleThreshold)
+                    // IMPORTANT: Check that the parked vehicle's owner matches the citizen.
+                    // This prevents issues if a parked vehicle was reassigned to a different owner.
+                    if (parkedVehicleId < VehicleManager.instance.m_parkedVehicles.m_buffer.Length)
                     {
-                        _tempStaleKeys.Add(entry.Key);
-                        continue; // Move to the next entry
+                        ref var parkedVehicle = ref VehicleManager.instance.m_parkedVehicles.m_buffer[parkedVehicleId];
+                        if (parkedVehicle.m_ownerCitizen == citizenId)
+                        {
+                            continue; // The parked vehicle is valid and still owned by this citizen. Do not remove.
+                        }
                     }
+                }
 
-                    // Check if the citizen still exists
-                    if (CitizenManager.instance.m_citizens.m_buffer[citizenId].m_instance == 0)
-                    {
-                        _tempStaleKeys.Add(entry.Key);
-                    }
-                }      
+                // If we reach this point, the entry is stale. The reasons are:
+                // 1. The citizen has no parked vehicle (parkedVehicleId == 0)
+                // 2. The parked vehicle ID is invalid
+                // 3. The parked vehicle exists but is no longer owned by this citizen
+
+                // To prevent removing a need that was just created, we use a timeout.
+                if (currentTime - entry.Value.FrameIndex > staleThreshold)
+                {
+                    _tempStaleKeys.Add(entry.Key);
+                }
             }
 
             // Remove the stale entries
