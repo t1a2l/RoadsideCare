@@ -3,6 +3,7 @@ using HarmonyLib;
 using MoreTransferReasons;
 using MoreTransferReasons.AI;
 using RoadsideCare.Managers;
+using static RenderManager;
 
 namespace RoadsideCare.HarmonyPatches
 {
@@ -14,6 +15,13 @@ namespace RoadsideCare.HarmonyPatches
         public static void CreateVehicle(VehicleAI __instance, ushort vehicleID, ref Vehicle data)
         {
             CreateNeedsForVehicle(__instance, vehicleID, ref data);
+        }
+
+        [HarmonyPatch(typeof(VehicleAI), "UpdateParkedVehicle")]
+        [HarmonyPostfix]
+        public static void UpdateParkedVehicle(VehicleAI __instance, ushort parkedID, ref VehicleParked parkedData)
+        {
+            CreateNeedsForParkedVehicle(__instance, parkedID, ref parkedData);
         }
 
         [HarmonyPatch(typeof(VehicleAI), "SimulationStep",
@@ -86,6 +94,19 @@ namespace RoadsideCare.HarmonyPatches
                 int randomDirtiness = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
                 int randomWear = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
                 VehicleNeedsManager.CreateVehicleNeeds(vehicleID, 0, 0, 0, randomFuelAmount, truckFuelCapacity, randomDirtiness, randomWear);
+            }
+        }
+
+        public static void CreateNeedsForParkedVehicle(VehicleAI instance, ushort parkedID, ref VehicleParked data)
+        {
+            float passengerCarFuelCapacity = 60f;
+
+            if (instance is PassengerCarAI && !VehicleNeedsManager.ParkedVehicleNeedsExist(parkedID))
+            {
+                int randomFuelAmount = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
+                int randomDirtiness = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
+                int randomWear = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
+                VehicleNeedsManager.CreateParkedVehicleNeeds(parkedID, data.m_ownerCitizen, randomFuelAmount, passengerCarFuelCapacity, randomDirtiness, randomWear);
             }
         }
 
