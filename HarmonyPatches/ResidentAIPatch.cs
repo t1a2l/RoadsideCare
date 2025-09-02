@@ -58,6 +58,7 @@ namespace RoadsideCare.HarmonyPatches
                 case ExtendedTransferManager.TransferReason.VehicleMinorRepair:
                 case ExtendedTransferManager.TransferReason.VehicleMajorRepair:
                     data.m_flags &= ~Citizen.Flags.Evacuating;
+                    Singleton<VehicleManager>.instance.m_vehicles.m_buffer[data.m_vehicle].m_custom = (ushort)material;
                     __instance.StartMoving(citizenID, ref data, source_building, offer.Building);
                     return false;
             }

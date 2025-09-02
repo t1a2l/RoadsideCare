@@ -66,6 +66,11 @@ namespace RoadsideCare.HarmonyPatches
                 return true;
             }
 
+            if(data.m_custom == 0)
+            {
+                return true;
+            }
+
             var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI();
 
             if ((buildingAI is GasStationAI || buildingAI is GasPumpAI) && data.m_transferType >= 200 && data.m_transferType != 255)
@@ -111,7 +116,7 @@ namespace RoadsideCare.HarmonyPatches
             {
                 if (VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
-                    CarAIPatch.ArriveAtTarget(__instance, vehicleID, ref data);
+                    HandleRoadSideCareManager.ArriveAtTarget(__instance, vehicleID, ref data);
                     __result = false;
                     return false;
                 }
@@ -127,7 +132,7 @@ namespace RoadsideCare.HarmonyPatches
             {
                 if (VehicleNeedsManager.IsRefueling(vehicleID) || VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
-                    CarAIPatch.TakingCareOfVehicle(__instance, vehicleID, ref data);
+                    HandleRoadSideCareManager.TakingCareOfVehicle(__instance, vehicleID, ref data);
                 }
             }
         }
@@ -142,6 +147,7 @@ namespace RoadsideCare.HarmonyPatches
                     material == ExtendedTransferManager.TransferReason.VehicleWash || material == ExtendedTransferManager.TransferReason.VehicleMinorRepair || 
                     material == ExtendedTransferManager.TransferReason.VehicleMajorRepair)
                 {
+                    data.m_custom = (ushort)material;
                     __instance.SetTarget(vehicleID, ref data, offer.Building);
                     return false;
                 }

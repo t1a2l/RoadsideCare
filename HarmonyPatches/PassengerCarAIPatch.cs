@@ -102,7 +102,11 @@ namespace RoadsideCare.HarmonyPatches
         [HarmonyPrefix]
         public static bool SetTarget(ref PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
-            if(VehicleNeedsManager.VehicleNeedsExist(vehicleID))
+            if (data.m_custom == 0)
+            {
+                return true;
+            }
+            if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var citizenId = GetOwnerID(vehicleID, ref data).Citizen;
                 if (citizenId != 0)
@@ -146,7 +150,7 @@ namespace RoadsideCare.HarmonyPatches
             {
                 if (VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
-                    CarAIPatch.ArriveAtTarget(__instance, vehicleID, ref data);
+                    HandleRoadSideCareManager.ArriveAtTarget(__instance, vehicleID, ref data);
                     __result = false;
                     return false;
                 }
@@ -161,11 +165,9 @@ namespace RoadsideCare.HarmonyPatches
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-
                 if (VehicleNeedsManager.IsRefueling(vehicleID) || VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
-                    CarAIPatch.TakingCareOfVehicle(__instance, vehicleID, ref data);
+                    HandleRoadSideCareManager.TakingCareOfVehicle(__instance, vehicleID, ref data);
                 }
             }
         }
