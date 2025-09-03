@@ -1,4 +1,6 @@
-﻿using ColossalFramework;
+﻿using System.Diagnostics;
+using System.Reflection;
+using ColossalFramework;
 using HarmonyLib;
 using RoadsideCare.Managers;
 
@@ -21,7 +23,25 @@ namespace RoadsideCare.HarmonyPatches
         [HarmonyPostfix]
         public static void AddToGrid(ushort parked, ref VehicleParked data)
         {
-            CreateNeedsForParkedVehicle(parked, ref data);
+            // Get the full stack trace.
+            var stackTrace = new StackTrace();
+
+            // The stack frame at index 0 is this Prefix method.
+            // The stack frame at index 1 is the original MyTargetMethod.
+            // The stack frame at index 2 is the method that called MyTargetMethod.
+            var callingFrame = stackTrace.GetFrame(2);
+
+            if (callingFrame != null)
+            {
+                // Get the method information from the stack frame.
+                MethodBase callingMethod = callingFrame.GetMethod();
+                string callingMethodName = callingMethod.Name;
+
+                if (callingMethodName == "AfterDeserialize")
+                {
+                    CreateNeedsForParkedVehicle(parked, ref data);
+                }
+            }
         }
 
         public static void CreateNeedsForParkedVehicle(ushort parkedID, ref VehicleParked data)
