@@ -44,7 +44,7 @@ namespace RoadsideCare.HarmonyPatches
 
                 foreach (ushort buildingID in gasStationBuildings.Keys)
                 {
-                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 20f))
                     {
                         var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
                         if (!gasStation.FuelPoints.Contains(segmentID))
@@ -64,7 +64,7 @@ namespace RoadsideCare.HarmonyPatches
 
                 foreach (ushort buildingID in vehicleWashBuildings.Keys)
                 {
-                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 20f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         if (!vehicleWashBuilding.VehicleWashLanes.Contains(segmentID))
@@ -84,7 +84,7 @@ namespace RoadsideCare.HarmonyPatches
 
                 foreach (ushort buildingID in vehicleWashBuildings.Keys)
                 {
-                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 60f))
+                    if (IsSegmentFullyWithinRadius(segmentID, buildingID, 20f))
                     {
                         var vehicleWashBuilding = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingID);
                         if (!vehicleWashBuilding.VehicleWashPoints.Contains(segmentID))
