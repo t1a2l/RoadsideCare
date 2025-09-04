@@ -1,5 +1,4 @@
 ﻿using ColossalFramework;
-using ColossalFramework.Globalization;
 using HarmonyLib;
 using MoreTransferReasons;
 using MoreTransferReasons.AI;
@@ -19,40 +18,54 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
+
+                ushort buildingId = 0;
+
+                var sourceBuildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].Info.GetAI();
+                var targetBuildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].Info.GetAI();
+
+                if ((data.m_flags & Vehicle.Flags.GoingBack) != 0 && (sourceBuildingAI is GasStationAI || sourceBuildingAI is GasPumpAI || sourceBuildingAI is VehicleWashBuildingAI || sourceBuildingAI is RepairStationAI))
+                {
+                    buildingId = data.m_sourceBuilding;
+                }
+                if ((data.m_flags & Vehicle.Flags.GoingBack) == 0 &&  (targetBuildingAI is GasStationAI || targetBuildingAI is GasPumpAI || targetBuildingAI is VehicleWashBuildingAI || targetBuildingAI is RepairStationAI))
+                {
+                    buildingId = data.m_targetBuilding;
+                }
+                if(buildingId == 0)
+                {
+                    return;
+                }
+
                 if (VehicleNeedsManager.IsGoingToRefuel(vehicleID))
                 {
-                    target.Building = data.m_targetBuilding;
+                    target.Building = buildingId;
                     __result = "Driving to gas station ";
                 }
                 else if (VehicleNeedsManager.IsRefueling(vehicleID))
                 {
-                    target.Building = data.m_targetBuilding;
+                    target.Building = buildingId;
                     __result = "Fueling vehicle at gas station ";
                 }
                 else if (VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID))
                 {
-                    target.Building = data.m_targetBuilding;
+                    target.Building = buildingId;
                     __result = "Driving to truck wash ";
                 }
                 else if (VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
-                    target.Building = data.m_targetBuilding;
+                    target.Building = buildingId;
                     __result = "Washing vehicle at truck wash ";
                 }
                 else if (VehicleNeedsManager.IsGoingToGetRepaired(vehicleID))
                 {
-                    target.Building = data.m_targetBuilding;
+                    target.Building = buildingId;
                     __result = "Driving to mechanic ";
                 }
                 else if (VehicleNeedsManager.IsBeingRepaired(vehicleID))
                 {
-                    target.Building = data.m_targetBuilding;
+                    target.Building = buildingId;
                     __result = "Repairing vehicle at mechanic ";
-                }
-                if (data.m_targetBuilding == vehicleNeeds.OriginalTargetBuilding)
-                {
-                    target.Building = data.m_targetBuilding;
-                    __result += " and " + Locale.Get("VEHICLE_STATUS_GOINGTO");
                 }
             }
         }
@@ -78,7 +91,6 @@ namespace RoadsideCare.HarmonyPatches
                 return true;
             }
 
-
             if (buildingAI is not GasStationAI && buildingAI is not GasPumpAI && buildingAI is not VehicleWashBuildingAI && buildingAI is not RepairStationAI)
             {
                 return true; // Only allow setting target to gas station, gas pump, car wash or mechanic
@@ -86,22 +98,34 @@ namespace RoadsideCare.HarmonyPatches
 
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                var original_targetBuilding = data.m_targetBuilding;
+                ushort original_targetBuilding;
                 if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
                 {
                     original_targetBuilding = data.m_sourceBuilding;
+                    data.m_sourceBuilding = targetBuilding;
                 }
-                    
+                else
+                {
+                    original_targetBuilding = data.m_targetBuilding;
+                    data.m_targetBuilding = targetBuilding;
+                }
                 VehicleNeedsManager.SetOriginalTargetBuilding(vehicleID, original_targetBuilding);
-
-                data.m_targetBuilding = targetBuilding;
 
                 var pathToRoadsideCareBuilding = CustomPathFindAI.CustomStartPathFind(vehicleID, ref data);
                 if (!pathToRoadsideCareBuilding)
                 {
                     VehicleNeedsManager.ClearAtLocationMode(vehicleID);
                     VehicleNeedsManager.ClearGoingToMode(vehicleID);
-                    __instance.SetTarget(vehicleID, ref data, original_targetBuilding);
+                    data.m_custom = 0;
+                    if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+                    {
+                        data.m_sourceBuilding = original_targetBuilding;
+                        __instance.SetTarget(vehicleID, ref data, 0);
+                    }
+                    else
+                    {
+                        __instance.SetTarget(vehicleID, ref data, original_targetBuilding);
+                    }  
                 }
                 return false;
             }
@@ -111,6 +135,22 @@ namespace RoadsideCare.HarmonyPatches
         [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ArriveAtTarget")]
         [HarmonyPrefix]
         public static bool ArriveAtTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        {
+            if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
+            {
+                if (VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
+                {
+                    HandleRoadSideCareManager.ArriveAtTarget(__instance, vehicleID, ref data);
+                    __result = false;
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ArriveAtSource")]
+        [HarmonyPrefix]
+        public static bool ArriveAtSource(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
