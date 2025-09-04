@@ -2,6 +2,7 @@
 using HarmonyLib;
 using MoreTransferReasons;
 using MoreTransferReasons.AI;
+using RoadsideCare.AI;
 using RoadsideCare.Managers;
 
 namespace RoadsideCare.HarmonyPatches
@@ -15,6 +16,43 @@ namespace RoadsideCare.HarmonyPatches
         {
             CreateNeedsForVehicle(__instance, vehicleID, ref data);
         }
+
+        [HarmonyPatch(typeof(VehicleAI), "GetOwnerID")]
+        [HarmonyPrefix]
+        public static bool GetOwnerID(ushort vehicleID, ref Vehicle vehicleData, ref InstanceID __result)
+        {
+            if (VehicleNeedsManager.VehicleNeedsExist(vehicleID) && vehicleData.Info.GetAI() is ExtendedCargoTruckAI)
+            {
+                var needUpdateOwner = false;
+
+                var sourceBuildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding].Info.GetAI();
+                var targetBuildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicleData.m_targetBuilding].Info.GetAI();
+
+                if (sourceBuildingAI is GasStationAI || sourceBuildingAI is GasPumpAI || sourceBuildingAI is VehicleWashBuildingAI || sourceBuildingAI is RepairStationAI)
+                {
+                    needUpdateOwner = true;
+                }
+                if (!needUpdateOwner && (targetBuildingAI is GasStationAI || targetBuildingAI is GasPumpAI || targetBuildingAI is VehicleWashBuildingAI || targetBuildingAI is RepairStationAI))
+                {
+                    needUpdateOwner = true;
+                }
+
+                if (needUpdateOwner)
+                {
+                    var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
+                    if (vehicleNeeds.OriginalTargetBuilding != 0)
+                    {
+                        __result = new InstanceID
+                        {
+                            Building = vehicleNeeds.OriginalTargetBuilding
+                        };
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
 
         [HarmonyPatch(typeof(VehicleAI), "SimulationStep",
             [typeof(ushort), typeof(Vehicle), typeof(Vehicle.Frame), typeof(ushort), typeof(Vehicle), typeof(int)],
