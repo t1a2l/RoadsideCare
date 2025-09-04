@@ -16,11 +16,15 @@ namespace RoadsideCare.Managers
         private const float PROXIMITY_THRESHOLD = 10f;
         private const float STEPS_PER_SECOND = 4f;
 
-        public static void ArriveAtTarget(CarAI instance, ushort vehicleID, ref Vehicle data)
+        public static void ArriveAtRoadCareBuilding(ushort vehicleID, ref Vehicle data)
         {
             if (VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID))
             {
-                var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                Building building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+                {
+                    building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding];
+                }
                 var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
                 if (distance < SERVICE_DISTANCE_THRESHOLD && (building.Info.GetAI() is GasStationAI || building.Info.GetAI() is GasPumpAI || building.Info.GetAI() is VehicleWashBuildingAI || building.Info.GetAI() is RepairStationAI))
                 {
@@ -160,8 +164,14 @@ namespace RoadsideCare.Managers
             {
                 var fuelAmount = 4 * vehicleNeeds.FuelPerFrame;
                 // Update the gas station's fuel buffer
-                ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                ModifyGasStationFuelAmount(vehicleID, ref data, ref building, (int)fuelAmount);
+                ushort buildingID = data.m_targetBuilding;
+                ref Building building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+                {
+                    buildingID = data.m_sourceBuilding;
+                    building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding];
+                }
+                ModifyGasStationFuelAmount(vehicleID, ref data, buildingID, ref building, (int)fuelAmount);
             }
         }
 
@@ -183,7 +193,11 @@ namespace RoadsideCare.Managers
         {
             var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
 
-            ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+            ref Building building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+            if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+            {
+                building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding];
+            }
 
             float distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
 
@@ -335,6 +349,7 @@ namespace RoadsideCare.Managers
             {
                 if((data.m_flags & Vehicle.Flags.GoingBack) != 0)
                 {
+                    data.m_sourceBuilding = targetBuilding;
                     extendedCargoTruckAI.SetTarget(vehicleID, ref data, 0);
                 }
                 else
@@ -344,7 +359,7 @@ namespace RoadsideCare.Managers
             }
         }
 
-        private static void ModifyGasStationFuelAmount(ushort vehicleID, ref Vehicle data, ref Building building, int fuelAmount)
+        private static void ModifyGasStationFuelAmount(ushort vehicleID, ref Vehicle data, ushort buildingID, ref Building building, int fuelAmount)
         {
             bool iElectricPassengerCar = data.Info.GetAI() is PassengerCarAI && data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
             bool iElectricCargoTruck = data.Info.GetAI() is ExtendedCargoTruckAI extendedCargoTruckAI && extendedCargoTruckAI.m_isElectric;
@@ -353,11 +368,11 @@ namespace RoadsideCare.Managers
             {
                 if (building.Info.GetAI() is GasPumpAI gasPumpAI)
                 {
-                    gasPumpAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref fuelAmount);
+                    gasPumpAI.ExtendedModifyMaterialBuffer(buildingID, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref fuelAmount);
                 }
                 if (building.Info.GetAI() is GasStationAI gasStationAI)
                 {
-                    gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref fuelAmount);
+                    gasStationAI.ExtendedModifyMaterialBuffer(buildingID, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref fuelAmount);
                 }
             }
             Singleton<EconomyManager>.instance.AddResource(EconomyManager.Resource.PublicIncome, 20, ItemClass.Service.Vehicles, ItemClass.SubService.None, ItemClass.Level.Level2);
