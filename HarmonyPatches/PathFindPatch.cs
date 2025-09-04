@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using ColossalFramework;
 using HarmonyLib;
 using RoadsideCare.AI;
 
@@ -22,10 +23,31 @@ namespace RoadsideCare.HarmonyPatches
                 uint m_endLaneA = (uint)typeof(PathFind).GetField("m_endLaneA", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(__instance);
                 uint m_endLaneB = (uint)typeof(PathFind).GetField("m_startLaneA", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(__instance);
 
-                // one lane per segment for these types of roads
-                uint laneId = segment.m_lanes;
+                ushort segmentId = Singleton<NetManager>.instance.m_lanes.m_buffer[segment.m_lanes].m_segment;
 
-                if(laneId != m_endLaneA && laneId != m_endLaneB && laneId != m_startLaneA && laneId != m_startLaneB)
+                bool sameSegment = false;
+
+                if (m_startLaneA != 0 && Singleton<NetManager>.instance.m_lanes.m_buffer[m_startLaneA].m_segment == segmentId)
+                {
+                    sameSegment = true;
+                }
+
+                if (!sameSegment && m_startLaneB != 0 && Singleton<NetManager>.instance.m_lanes.m_buffer[m_startLaneB].m_segment == segmentId)
+                {
+                    sameSegment = true;
+                }
+
+                if (!sameSegment && m_endLaneA != 0 && Singleton<NetManager>.instance.m_lanes.m_buffer[m_endLaneA].m_segment == segmentId)
+                {
+                    sameSegment = true;
+                }
+
+                if (!sameSegment && m_endLaneB != 0 && Singleton<NetManager>.instance.m_lanes.m_buffer[m_endLaneB].m_segment == segmentId)
+                {
+                    sameSegment = true;
+                }
+
+                if(!sameSegment)
                 {
                     // not a start or end lane for this pathfinding - make it very slow to avoid using it
                     __result /= 100;
