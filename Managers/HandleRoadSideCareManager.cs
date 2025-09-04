@@ -333,7 +333,14 @@ namespace RoadsideCare.Managers
             }
             else if (data.Info.GetAI() is ExtendedCargoTruckAI extendedCargoTruckAI)
             {
-                extendedCargoTruckAI.SetTarget(vehicleID, ref data, targetBuilding);
+                if((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+                {
+                    extendedCargoTruckAI.SetTarget(vehicleID, ref data, 0);
+                }
+                else
+                {
+                    extendedCargoTruckAI.SetTarget(vehicleID, ref data, targetBuilding);
+                }     
             }
         }
 
