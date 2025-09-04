@@ -9,14 +9,15 @@ using UnityEngine;
 
 namespace RoadsideCare.AI
 {
-    public class CustomPathFindAI : CargoTruckAI
+    public class CustomPathFindAI : ExtendedCargoTruckAI
     {
-        private delegate bool StartPathFindCargoTruckAIDelegate(CargoTruckAI instance, ushort vehicleID, ref Vehicle vehicleData, Vector3 startPos, Vector3 endPos, bool startBothWays, bool endBothWays, bool undergroundTarget);
-        private static readonly StartPathFindCargoTruckAIDelegate StartPathFindCargoTruckAI = AccessTools.MethodDelegate<StartPathFindCargoTruckAIDelegate>(typeof(CargoTruckAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(Vector3), typeof(Vector3), typeof(bool), typeof(bool), typeof(bool)], null), null, false);
+        private delegate bool StartPathFindCargoTruckAIDelegate(ExtendedCargoTruckAI instance, ushort vehicleID, ref Vehicle vehicleData, Vector3 startPos, Vector3 endPos, bool startBothWays, bool endBothWays, bool undergroundTarget);
+        private static readonly StartPathFindCargoTruckAIDelegate StartPathFindCargoTruckAI = AccessTools.MethodDelegate<StartPathFindCargoTruckAIDelegate>(typeof(ExtendedCargoTruckAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(Vector3), typeof(Vector3), typeof(bool), typeof(bool), typeof(bool)], null), null, false);
 
         public static bool CustomStartPathFind(ushort vehicleID, ref Vehicle vehicleData)
         {
             var m_info = vehicleData.Info;
+            Singleton<ExtendedCargoTruckAI>.instance.m_info = vehicleData.Info;
             if ((vehicleData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
             {
                 return true;
@@ -28,43 +29,43 @@ namespace RoadsideCare.AI
                     BuildingManager instance = Singleton<BuildingManager>.instance;
                     BuildingInfo info = instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding].Info;
 
-                    if (info.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
+                    if (info.GetAI() is GasStationAI && GasStationManager.GasStationBuildingExist(vehicleData.m_sourceBuilding))
                     {
                         VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
                         Randomizer randomizer2 = new(vehicleID);
-                        info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
-                        return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
+                        info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
+                        return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
                     }
-                    if (info.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
+                    if (info.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_sourceBuilding))
                     {
-                        if (TryFindRandomGasPumpPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
+                        if (TryFindRandomGasPumpPoint(vehicleID, ref vehicleData, vehicleData.m_sourceBuilding, out Vector3 fuelPointTargetPos))
                         {
-                            return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, fuelPointTargetPos, true, true, false);
+                            return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, fuelPointTargetPos, true, true, false);
                         }
                     }
-                    if (info.GetAI() is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(vehicleData.m_targetBuilding))
+                    if (info.GetAI() is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(vehicleData.m_sourceBuilding))
                     {
-                        if (TryFindRandomVehicleWashPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
+                        if (TryFindRandomVehicleWashPoint(vehicleID, ref vehicleData, vehicleData.m_sourceBuilding, out Vector3 vehicleWashPointTargetPos))
                         {
-                            var result = StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
+                            var result = StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
                             if (result)
                             {
                                 return result;
                             }
                             else
                             {
-                                if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
+                                if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_sourceBuilding, out Vector3 vehicleWashLaneTargetPos))
                                 {
-                                    return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
+                                    return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                                 }
                                 return false;
                             }
                         }
                         else
                         {
-                            if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
+                            if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_sourceBuilding, out Vector3 vehicleWashLaneTargetPos))
                             {
-                                return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
+                                return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                             }
                             return false;
                         }
@@ -81,20 +82,20 @@ namespace RoadsideCare.AI
                     VehicleNeedsManager.SetIsGoingToRefuelMode(vehicleID);
                     Randomizer randomizer2 = new(vehicleID);
                     info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out Vector3 b, out Vector3 target2);
-                    return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
+                    return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2, true, true, false);
                 }
                 if (info2.GetAI() is GasPumpAI && GasStationManager.GasStationBuildingExist(vehicleData.m_targetBuilding))
                 {
                     if(TryFindRandomGasPumpPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 fuelPointTargetPos))
                     {
-                        return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, fuelPointTargetPos, true, true, false);
+                        return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, fuelPointTargetPos, true, true, false);
                     }
                 }
                 if (info2.GetAI() is VehicleWashBuildingAI && VehicleWashBuildingManager.VehicleWashBuildingExist(vehicleData.m_targetBuilding))
                 {
                     if (TryFindRandomVehicleWashPoint(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashPointTargetPos))
                     {
-                        var result = StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
+                        var result = StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashPointTargetPos, true, true, false);
                         if (result)
                         {
                             return result;
@@ -103,7 +104,7 @@ namespace RoadsideCare.AI
                         {
                             if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
                             {
-                                return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
+                                return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                             }
                             return false;
                         }
@@ -112,7 +113,7 @@ namespace RoadsideCare.AI
                     {
                         if (TryFindRandomVehicleTunnelWash(vehicleID, ref vehicleData, vehicleData.m_targetBuilding, out Vector3 vehicleWashLaneTargetPos))
                         {
-                            return StartPathFindCargoTruckAI(Singleton<CargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
+                            return StartPathFindCargoTruckAI(Singleton<ExtendedCargoTruckAI>.instance, vehicleID, ref vehicleData, vehicleData.m_targetPos3, vehicleWashLaneTargetPos, true, true, false);
                         }
                         return false;
                     }
