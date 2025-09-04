@@ -150,7 +150,7 @@ namespace RoadsideCare.HarmonyPatches
             {
                 if (VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID))
                 {
-                    HandleRoadSideCareManager.ArriveAtTarget(__instance, vehicleID, ref data);
+                    HandleRoadSideCareManager.ArriveAtRoadCareBuilding(vehicleID, ref data);
                     __result = false;
                     return false;
                 }
