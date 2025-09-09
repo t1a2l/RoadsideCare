@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Policy;
 using CitiesHarmony.API;
 using ColossalFramework;
 using ColossalFramework.UI;
@@ -20,15 +18,27 @@ namespace RoadsideCare
 
         string IUserMod.Description => "Track individual vehicles' needs and strategically place gas stations, car washes, and repair shops as roadside care for vehicles.";
 
+        public static bool IsEnabled = false;
+        public static LoadMode CurrentLoadMode;
+        public static bool isGuiRunning = false;
+        public static GasStationSegmentSelectButton GSButton;
+        public static VehicleWashBuildingLaneSegmentSelectButton VWPButton;
+        public static VehicleWashBuildingPointSegmentSelectButton VWLButton;
+        public static string m_atlasName = "RoadsideCareAtlas.png";
+        public static bool m_atlasLoaded;
+        private const float LeftMargin = 24f;
+
         public void OnEnabled()
         {
             RoadsideCareSettings.Init();
             HarmonyHelper.DoOnHarmonyReady(() => PatchUtil.PatchAll());
+            IsEnabled = true;
         }
 
         public void OnDisabled()
         {
             if (HarmonyHelper.IsHarmonyInstalled) PatchUtil.UnpatchAll();
+            IsEnabled = false;
         }
 
         public override void OnCreated(ILoading loading)
@@ -78,6 +88,11 @@ namespace RoadsideCare
                     return;
             }
 
+            if (mode == LoadMode.LoadGame || mode == LoadMode.NewGame)
+            {
+                SetupGui();
+            }
+
             var buildings = Singleton<BuildingManager>.instance.m_buildings;
 
             for (ushort buildingId = 0; buildingId < buildings.m_size; buildingId++)
@@ -117,7 +132,16 @@ namespace RoadsideCare
             }
         }
 
-        private const float LeftMargin = 24f;
+        public override void OnLevelUnloading()
+        {
+            if (CurrentLoadMode == LoadMode.LoadGame || CurrentLoadMode == LoadMode.NewGame)
+            {
+                if (IsEnabled && isGuiRunning)
+                {
+                    RemoveGui();
+                }
+            }
+        }
 
         public void OnSettingsUI(UIHelperBase helper)
         {
@@ -155,6 +179,87 @@ namespace RoadsideCare
 
         }
 
+        private static void LoadSprites()
+        {
+            var SpriteNames = new string[] {
+                "FuelPoint",
+                "HandWash",
+                "WashLane"
+            };
+
+            if (TextureUtils.GetAtlas(m_atlasName) == null)
+            {
+                m_atlasLoaded = TextureUtils.InitialiseAtlas(m_atlasName);
+                for (int i = 0; i < SpriteNames.Length; i++)
+                {
+                    TextureUtils.AddSpriteToAtlas(new Rect(111 * i, 1, 111, 102), SpriteNames[i], m_atlasName);
+                }
+            }
+        }
+
+        public static void SetupGui()
+        {
+            LoadSprites();
+            if (m_atlasLoaded)
+            {
+                SetupPlayerBuildingButton();
+                isGuiRunning = true;
+            }
+            
+        }
+
+        public static void RemoveGui()
+        {
+            isGuiRunning = false;
+            if (GSButton != null)
+            {
+                UnityEngine.Object.Destroy(GSButton);
+                GSButton = null;
+            }
+            if (VWLButton != null)
+            {
+                UnityEngine.Object.Destroy(VWLButton);
+                VWLButton = null;
+            }
+            if (VWPButton != null)
+            {
+                UnityEngine.Object.Destroy(VWPButton);
+                VWPButton = null;
+            }
+        }
+
+        public static void SetupPlayerBuildingButton()
+        {
+            var playerbuildingInfo = UIView.Find<UIPanel>("(Library) CityServiceWorldInfoPanel");
+            if (GSButton == null)
+            {
+                GSButton = (playerbuildingInfo.AddUIComponent(typeof(GasStationSegmentSelectButton)) as GasStationSegmentSelectButton);
+            }
+            if (VWLButton == null)
+            {
+                VWLButton = (playerbuildingInfo.AddUIComponent(typeof(VehicleWashBuildingPointSegmentSelectButton)) as VehicleWashBuildingPointSegmentSelectButton);
+            }
+            if (VWPButton == null)
+            {
+                VWPButton = (playerbuildingInfo.AddUIComponent(typeof(VehicleWashBuildingLaneSegmentSelectButton)) as VehicleWashBuildingLaneSegmentSelectButton);
+            }
+
+            GSButton.width = 30f;
+            GSButton.height = 40f;
+            GSButton.relativePosition = new Vector3(playerbuildingInfo.size.x - GSButton.width - 90, playerbuildingInfo.size.y - GSButton.height);
+            GSButton.Hide();
+
+            VWLButton.width = 30f;
+            VWLButton.height = 40f;
+            VWLButton.relativePosition = new Vector3(playerbuildingInfo.size.x - GSButton.width - VWLButton.width - 90, playerbuildingInfo.size.y - GSButton.height - VWLButton.height);
+            VWLButton.Hide();
+
+            VWPButton.width = 30f;
+            VWPButton.height = 40f;
+            VWPButton.relativePosition = new Vector3(playerbuildingInfo.size.x - GSButton.width - VWLButton.width - VWPButton.width - 90, playerbuildingInfo.size.y - GSButton.height - VWLButton.height - VWPButton.width);
+            VWPButton.Hide();
+        }
+
     }
 
 
@@ -176,4 +281,6 @@ namespace RoadsideCare
             }
         }
     }
+
+
 }
