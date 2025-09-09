@@ -24,6 +24,9 @@
 		<Copy SourceFiles="@(ModFiles)" DestinationFolder="$(ModDirectory)" />
 	</Target>
 	<ItemGroup>
+	  <EmbeddedResource Include="Utils\Atlas\RoadsideCareAtlas.png" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="CitiesHarmony.API" Version="2.2.0" />
 	</ItemGroup>
 	<ItemGroup>
