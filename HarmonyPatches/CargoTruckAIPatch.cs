@@ -1,7 +1,5 @@
 ﻿using ColossalFramework;
 using HarmonyLib;
-using MoreTransferReasons;
-using MoreTransferReasons.AI;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
 using UnityEngine;
@@ -9,11 +7,11 @@ using UnityEngine;
 namespace RoadsideCare.HarmonyPatches
 {
     [HarmonyPatch]
-    public static class ExtendedCargoTruckAIPatch
+    public static class CargoTruckAIPatch
     {
-        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "GetLocalizedStatus")]
+        [HarmonyPatch(typeof(CargoTruckAI), "GetLocalizedStatus")]
         [HarmonyPostfix]
-        public static void GetLocalizedStatus(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
+        public static void GetLocalizedStatus(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
@@ -70,9 +68,9 @@ namespace RoadsideCare.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "SetTarget")]
+        [HarmonyPatch(typeof(CargoTruckAI), "SetTarget")]
         [HarmonyPrefix]
-        public static bool SetTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        public static bool SetTarget(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
             if(targetBuilding == 0)
             {
@@ -86,7 +84,7 @@ namespace RoadsideCare.HarmonyPatches
 
             var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI();
 
-            if ((buildingAI is GasStationAI || buildingAI is GasPumpAI) && data.m_transferType >= 200 && data.m_transferType != 255)
+            if ((buildingAI is GasStationAI || buildingAI is GasPumpAI) && (data.m_transferType == (byte)Mod.VehicleFuel || data.m_transferType == (byte)Mod.VehicleFuelElectric))
             {
                 return true;
             }
@@ -132,9 +130,9 @@ namespace RoadsideCare.HarmonyPatches
             return true;
         }
 
-        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ArriveAtTarget")]
+        [HarmonyPatch(typeof(CargoTruckAI), "ArriveAtTarget")]
         [HarmonyPrefix]
-        public static bool ArriveAtTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        public static bool ArriveAtTarget(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
@@ -148,9 +146,9 @@ namespace RoadsideCare.HarmonyPatches
             return true;
         }
 
-        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ArriveAtSource")]
+        [HarmonyPatch(typeof(CargoTruckAI), "ArriveAtSource")]
         [HarmonyPrefix]
-        public static bool ArriveAtSource(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        public static bool ArriveAtSource(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
@@ -164,9 +162,9 @@ namespace RoadsideCare.HarmonyPatches
             return true;
         }
 
-        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "SimulationStep")]
+        [HarmonyPatch(typeof(CargoTruckAI), "SimulationStep")]
         [HarmonyPostfix]
-        public static void SimulationStep(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, Vector3 physicsLodRefPos)
+        public static void SimulationStep(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, Vector3 physicsLodRefPos)
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
@@ -177,15 +175,15 @@ namespace RoadsideCare.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ExtendedStartTransfer")]
+        [HarmonyPatch(typeof(CargoTruckAI), "StartTransfer")]
         [HarmonyPrefix]
-        public static bool ExtendedStartTransfer(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ExtendedTransferManager.TransferReason material, ExtendedTransferManager.Offer offer)
+        public static bool StartTransfer(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                if(material == ExtendedTransferManager.TransferReason.VehicleFuel || material == ExtendedTransferManager.TransferReason.VehicleFuelElectric ||
-                    material == ExtendedTransferManager.TransferReason.VehicleWash || material == ExtendedTransferManager.TransferReason.VehicleMinorRepair || 
-                    material == ExtendedTransferManager.TransferReason.VehicleMajorRepair)
+                if(material == Mod.VehicleFuel || material == Mod.VehicleFuelElectric ||
+                    material == Mod.VehicleWash || material == Mod.VehicleMinorRepair || 
+                    material == Mod.VehicleMajorRepair)
                 {
                     data.m_custom = (ushort)material;
                     __instance.SetTarget(vehicleID, ref data, offer.Building);
@@ -197,7 +195,7 @@ namespace RoadsideCare.HarmonyPatches
 
         [HarmonyPatch(typeof(CargoTruckAI), "UpdateBuildingTargetPositions")]
         [HarmonyPrefix]
-        public static bool UpdateBuildingTargetPositions(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle vehicleData, Vector3 refPos, ushort leaderID, ref Vehicle leaderData, ref int index, float minSqrDistance)
+        public static bool UpdateBuildingTargetPositions(CargoTruckAI __instance, ushort vehicleID, ref Vehicle vehicleData, Vector3 refPos, ushort leaderID, ref Vehicle leaderData, ref int index, float minSqrDistance)
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {

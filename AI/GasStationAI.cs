@@ -3,13 +3,12 @@ using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
 using ColossalFramework.Math;
-using MoreTransferReasons;
 using RoadsideCare.Managers;
 using UnityEngine;
 
 namespace RoadsideCare.AI
 {
-    public class GasStationAI : PlayerBuildingAI, IExtendedBuildingAI
+    public class GasStationAI : PlayerBuildingAI
     {
         [CustomizableProperty("Uneducated Workers", "Workers", 0)]
         public int m_workPlaceCount0 = 5;
@@ -37,11 +36,11 @@ namespace RoadsideCare.AI
 
         public TransferManager.TransferReason m_incomingResource1 = TransferManager.TransferReason.Goods;
 
-        public readonly ExtendedTransferManager.TransferReason m_incomingResource2 = ExtendedTransferManager.TransferReason.PetroleumProducts;
+        public readonly TransferManager.TransferReason m_incomingResource2 = Mod.PetroleumProducts;
 
-        public readonly ExtendedTransferManager.TransferReason m_outgoingResource1 = ExtendedTransferManager.TransferReason.VehicleFuel;
+        public readonly TransferManager.TransferReason m_outgoingResource1 = Mod.VehicleFuel;
 
-        public readonly ExtendedTransferManager.TransferReason m_outgoingResource2 = ExtendedTransferManager.TransferReason.VehicleFuelElectric;
+        public readonly TransferManager.TransferReason m_outgoingResource2 = Mod.VehicleFuelElectric;
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
         {
@@ -93,9 +92,9 @@ namespace RoadsideCare.AI
                                     return Singleton<TransferManager>.instance.m_properties.m_resourceColors[(int)m_incomingResource1];
                                 }
                             }
-                            if (m_incomingResource2 != ExtendedTransferManager.TransferReason.None && (data.m_tempImport != 0 || data.m_finalImport != 0))
+                            if (m_incomingResource2 != TransferManager.TransferReason.None && (data.m_tempImport != 0 || data.m_finalImport != 0))
                             {
-                                return Singleton<ExtendedTransferManager>.instance.m_properties.m_resourceColors[(int)m_incomingResource2];
+                                return Singleton<TransferManager>.instance.m_properties.m_resourceColors[(int)m_incomingResource2];
                             }
                             return Singleton<InfoManager>.instance.m_properties.m_neutralColor;
                         }
@@ -144,7 +143,7 @@ namespace RoadsideCare.AI
 
         public override void GetPlacementInfoMode(out InfoManager.InfoMode mode, out InfoManager.SubInfoMode subMode, float elevation)
         {
-            if (m_incomingResource2 == ExtendedTransferManager.TransferReason.PetroleumProducts)
+            if (m_incomingResource2 == Mod.PetroleumProducts)
             {
                 mode = InfoManager.InfoMode.Connections;
                 subMode = InfoManager.SubInfoMode.None;
@@ -160,9 +159,9 @@ namespace RoadsideCare.AI
             string text = base.GetDebugString(buildingID, ref data);
             TransferManager.TransferReason incomingResource1 = m_incomingResource1;
             TransferManager.TransferReason outgoingTransferReason = GetOutgoingTransferReason(buildingID);
-            ExtendedTransferManager.TransferReason incomingResource2 = m_incomingResource2;
-            ExtendedTransferManager.TransferReason outgoingResource1 = m_outgoingResource1;
-            ExtendedTransferManager.TransferReason outgoingResource2 = m_outgoingResource2;
+            TransferManager.TransferReason incomingResource2 = m_incomingResource2;
+            TransferManager.TransferReason outgoingResource1 = m_outgoingResource1;
+            TransferManager.TransferReason outgoingResource2 = m_outgoingResource2;
             if (incomingResource1 != TransferManager.TransferReason.None)
             {
                 int count = 0;
@@ -177,7 +176,7 @@ namespace RoadsideCare.AI
                 {
                     CalculateGuestVehicles(buildingID, ref data, incomingResource1, ref count, ref cargo, ref capacity, ref outside);
                 }
-                Citizen.BehaviourData behaviour = default(Citizen.BehaviourData);
+                Citizen.BehaviourData behaviour = default;
                 int aliveCount = 0;
                 int totalCount = 0;
                 GetVisitBehaviour(buildingID, ref data, ref behaviour, ref aliveCount, ref totalCount);
@@ -199,31 +198,31 @@ namespace RoadsideCare.AI
                 CalculateGuestVehicles(buildingID, ref data, incomingResource1, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, incomingResource1.ToString(), data.m_customBuffer1, cargo);
             }
-            if (incomingResource2 != ExtendedTransferManager.TransferReason.None)
+            if (incomingResource2 != TransferManager.TransferReason.None)
             {
                 int count = 0;
                 int cargo = 0;
                 int capacity = 0;
                 int outside = 0;
-                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, incomingResource2, ref count, ref cargo, ref capacity, ref outside);
+                CalculateGuestVehicles(buildingID, ref data, incomingResource2, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, incomingResource2.ToString(), data.m_customBuffer1, cargo);
             }
-            if (outgoingResource1 != ExtendedTransferManager.TransferReason.None)
+            if (outgoingResource1 != TransferManager.TransferReason.None)
             {
                 int count = 0;
                 int cargo = 0;
                 int capacity = 0;
                 int outside = 0;
-                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource1, ref count, ref cargo, ref capacity, ref outside);
+                CalculateGuestVehicles(buildingID, ref data, outgoingResource1, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, outgoingResource1.ToString(), data.m_customBuffer1, cargo);
             }
-            if (m_allowBatteryRecharge && outgoingResource2 != ExtendedTransferManager.TransferReason.None)
+            if (m_allowBatteryRecharge && outgoingResource2 != TransferManager.TransferReason.None)
             {
                 int count = 0;
                 int cargo = 0;
                 int capacity = 0;
                 int outside = 0;
-                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource2, ref count, ref cargo, ref capacity, ref outside);
+                CalculateGuestVehicles(buildingID, ref data, outgoingResource2, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2}", text, outgoingResource2.ToString(), cargo);
             }
             return StringUtils.SafeFormat("{0}\nMoney: {1}/{2}", text, data.m_cashBuffer / 10, GetCashCapacity(buildingID, ref data) / 10); ;
@@ -362,14 +361,26 @@ namespace RoadsideCare.AI
             }
             if (material == m_incomingResource1 || ((m_incomingResource1 == TransferManager.TransferReason.Goods || m_incomingResource1 == TransferManager.TransferReason.Food) && material == TransferManager.TransferReason.LuxuryProducts))
             {
-                int width = data.Width;
-                int length = data.Length;
                 int num = MaxIncomingLoadSize();
                 int num2 = m_visitPlaceCount;
                 int num3 = Mathf.Min(Mathf.Max(num2 * 500, num * 4), 65535);
                 int goodsAmount = GetGoodsAmount(ref data);
                 amountDelta = Mathf.Clamp(amountDelta, 0, num3 - goodsAmount);
                 SetGoodsAmount(ref data, (ushort)(goodsAmount + amountDelta));
+            }
+            else if (GasStationManager.GasStationBuildingExist(buildingID) && material == m_incomingResource2)
+            {
+                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelCapacity - gasStation.FuelAmount);
+                gasStation.FuelAmount += (ushort)amountDelta;
+                GasStationManager.SetFuelAmount(buildingID, gasStation.FuelAmount);
+            }
+            else if(GasStationManager.GasStationBuildingExist(buildingID) && material == m_outgoingResource1)
+            {
+                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                amountDelta = Mathf.Clamp(amountDelta, 0, gasStation.FuelAmount);
+                gasStation.FuelAmount -= (ushort)amountDelta;
+                GasStationManager.SetFuelAmount(buildingID, gasStation.FuelAmount);
             }
             else
             {
@@ -399,12 +410,16 @@ namespace RoadsideCare.AI
             }
             if (material == m_incomingResource1 || ((m_incomingResource1 == TransferManager.TransferReason.Goods || m_incomingResource1 == TransferManager.TransferReason.Food) && material == TransferManager.TransferReason.LuxuryProducts))
             {
-                int width = data.Width;
-                int length = data.Length;
                 int num = MaxIncomingLoadSize();
                 int num2 = m_visitPlaceCount;
                 amount = GetGoodsAmount(ref data);
                 max = Mathf.Min(Mathf.Max(num2 * 500, num * 4), 65535);
+            }
+            else if (material == m_incomingResource2)
+            {
+                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
+                amount = gasStation.FuelAmount;
+                max = m_fuelCapacity;
             }
             else
             {
@@ -417,37 +432,6 @@ namespace RoadsideCare.AI
             int amountDelta = -100;
             ModifyMaterialBuffer(buildingID, ref data, TransferManager.TransferReason.Shopping, ref amountDelta);
             base.VisitorEnter(buildingID, ref data, citizen);
-        }
-
-        public void ExtendedStartTransfer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ExtendedTransferManager.Offer offer)
-        {
-
-        }
-
-        public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
-        {
-            var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
-            amount = gasStation.FuelAmount;
-            max = m_fuelCapacity;
-        }
-
-        public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
-        {
-            if(GasStationManager.GasStationBuildingExist(buildingID))
-            {
-                var gasStation = GasStationManager.GetGasStationBuilding(buildingID);
-                if (material == m_incomingResource2)
-                {
-                    amountDelta = Mathf.Clamp(amountDelta, 0, m_fuelCapacity - gasStation.FuelAmount);
-                    gasStation.FuelAmount += (ushort)amountDelta;
-                }
-                if (material == m_outgoingResource1)
-                {
-                    amountDelta = Mathf.Clamp(amountDelta, 0, gasStation.FuelAmount);
-                    gasStation.FuelAmount -= (ushort)amountDelta;
-                }
-                GasStationManager.SetFuelAmount(buildingID, gasStation.FuelAmount);
-            }
         }
 
         public override void BuildingDeactivated(ushort buildingID, ref Building data)
@@ -473,19 +457,19 @@ namespace RoadsideCare.AI
                 };
                 Singleton<TransferManager>.instance.RemoveOutgoingOffer(outgoingTransferReason, offer);
             }
-            ExtendedTransferManager.Offer offer2 = default;
+            TransferManager.TransferOffer offer2 = default;
             offer2.Building = buildingID;
-            if (m_incomingResource2 != ExtendedTransferManager.TransferReason.None)
+            if (m_incomingResource2 != TransferManager.TransferReason.None)
             {
-                Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer(m_incomingResource2, offer2);
+                Singleton<TransferManager>.instance.RemoveIncomingOffer(m_incomingResource2, offer2);
             }
-            if (m_outgoingResource1 != ExtendedTransferManager.TransferReason.None)
+            if (m_outgoingResource1 != TransferManager.TransferReason.None)
             {
-                Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource1, offer2);
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource1, offer2);
             }
-            if (m_allowBatteryRecharge && m_outgoingResource2 != ExtendedTransferManager.TransferReason.None)
+            if (m_allowBatteryRecharge && m_outgoingResource2 != TransferManager.TransferReason.None)
             {
-                Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource2, offer2);
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource2, offer2);
             }
             base.BuildingDeactivated(buildingID, ref data);
         }
@@ -640,33 +624,36 @@ namespace RoadsideCare.AI
                     {
                         if (missingFuel > m_fuelCapacity * 0.8)
                         {
-                            ExtendedTransferManager.Offer offer = default;
+                            TransferManager.TransferOffer offer = default;
+                            offer.Priority = 7;
                             offer.Building = buildingID;
                             offer.Position = buildingData.m_position;
                             offer.Amount = missingFuel;
                             offer.Active = false;
-                            Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource2, offer);
+                            Singleton<TransferManager>.instance.AddIncomingOffer(m_incomingResource2, offer);
                         }
 
                         if (gasStation.FuelAmount > m_fuelCapacity * 0.1)
                         {
-                            ExtendedTransferManager.Offer offer = default;
+                            TransferManager.TransferOffer offer = default;
+                            offer.Priority = 7;
                             offer.Building = buildingID;
                             offer.Position = buildingData.m_position;
                             offer.Amount = 1;
                             offer.Active = false;
-                            Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(m_outgoingResource1, offer);
+                            Singleton<TransferManager>.instance.AddOutgoingOffer(m_outgoingResource1, offer);
                         }
                     }
 
                     if (buildingData.m_electricityBuffer > 0)
                     {
-                        ExtendedTransferManager.Offer offer = default;
+                        TransferManager.TransferOffer offer = default;
+                        offer.Priority = 7;
                         offer.Building = buildingID;
                         offer.Position = buildingData.m_position;
                         offer.Amount = 1;
                         offer.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(m_outgoingResource2, offer);
+                        Singleton<TransferManager>.instance.AddOutgoingOffer(m_outgoingResource2, offer);
                     }
                 }
             }

@@ -1,7 +1,5 @@
 ﻿using ColossalFramework;
 using HarmonyLib;
-using MoreTransferReasons;
-using MoreTransferReasons.AI;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
 
@@ -21,7 +19,7 @@ namespace RoadsideCare.HarmonyPatches
         [HarmonyPrefix]
         public static bool GetOwnerID(ushort vehicleID, ref Vehicle vehicleData, ref InstanceID __result)
         {
-            if (VehicleNeedsManager.VehicleNeedsExist(vehicleID) && vehicleData.Info.GetAI() is ExtendedCargoTruckAI)
+            if (VehicleNeedsManager.VehicleNeedsExist(vehicleID) && vehicleData.Info.GetAI() is CargoTruckAI)
             {
                 var needUpdateOwner = false;
 
@@ -63,7 +61,7 @@ namespace RoadsideCare.HarmonyPatches
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 var vehicleNeeds = VehicleNeedsManager.GetVehicleNeeds(vehicleID);
-                if (__instance is ExtendedCargoTruckAI || __instance is PassengerCarAI)
+                if (__instance is CargoTruckAI || __instance is PassengerCarAI)
                 {
                     bool isOnWayToCareCenter = VehicleNeedsManager.IsGoingToRefuel(vehicleID) || VehicleNeedsManager.IsGoingToHandWash(vehicleID) || VehicleNeedsManager.IsGoingToTunnelWash(vehicleID) || VehicleNeedsManager.IsGoingToGetRepaired(vehicleID);
                     bool isBeingCaredFor = VehicleNeedsManager.IsRefueling(vehicleID) || VehicleNeedsManager.IsAtHandWash(vehicleID) || VehicleNeedsManager.IsAtTunnelWash(vehicleID) || VehicleNeedsManager.IsBeingRepaired(vehicleID);
@@ -118,7 +116,7 @@ namespace RoadsideCare.HarmonyPatches
                 int randomWear = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
                 VehicleNeedsManager.CreateVehicleNeeds(vehicleID, 0, 0, 0, randomFuelAmount, passengerCarFuelCapacity, randomDirtiness, randomWear);
             }
-            if (instance is ExtendedCargoTruckAI && !VehicleNeedsManager.VehicleNeedsExist(vehicleID))
+            if (instance is CargoTruckAI && !VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
                 int randomFuelAmount = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
                 int randomDirtiness = Singleton<SimulationManager>.instance.m_randomizer.Int32(0, 40);
@@ -134,18 +132,20 @@ namespace RoadsideCare.HarmonyPatches
             bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
             if ((fuelPercent > 0.2 && fuelPercent < 0.8 && shouldFuel) || fuelPercent <= 0.2)
             {
-                ExtendedTransferManager.Offer offer = default;
+                TransferManager.TransferOffer offer = default;
+                offer.Priority = 7;
                 offer.Vehicle = vehicleID;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                if (data.Info.m_vehicleAI is ExtendedCargoTruckAI extendedCargoTruckAI && extendedCargoTruckAI.m_isElectric)
+                bool isElectric = data.Info.m_class.m_subService == (ItemClass.SubService)43;
+                if (isElectric)
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuelElectric, offer);
+                    Singleton<TransferManager>.instance.AddIncomingOffer(Mod.VehicleFuelElectric, offer);
                 }
                 else
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuel, offer);
+                    Singleton<TransferManager>.instance.AddIncomingOffer(Mod.VehicleFuel, offer);
                 }
                 return;
             }
@@ -154,12 +154,13 @@ namespace RoadsideCare.HarmonyPatches
 
             if ((shouldWash && vehicleNeeds.DirtPercentage > 20) || vehicleNeeds.DirtPercentage >= 80)
             {
-                ExtendedTransferManager.Offer offer = default;
+                TransferManager.TransferOffer offer = default;
+                offer.Priority = 7;
                 offer.Vehicle = vehicleID;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
+                Singleton<TransferManager>.instance.AddIncomingOffer(Mod.VehicleWash, offer);
                 return;
             }
 
@@ -167,22 +168,23 @@ namespace RoadsideCare.HarmonyPatches
 
             //if (shouldReapir || vehicleNeeds.WearPercentage >= 80)
             //{
-            //    ExtendedTransferManager.Offer offer = default;
+            //    TransferManager.TransferOffer offer = default;
+            //    offer.Priority = 7;
             //    offer.Vehicle = vehicleID;
             //    offer.Position = data.GetLastFramePosition();
             //    offer.Amount = 1;
             //    offer.Active = true;
-            //    ExtendedTransferManager.TransferReason transferReason;
+            //    TransferManager.TransferOffer transferReason;
             //    bool isMajorRepair = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
             //    if (isMajorRepair)
             //    {
-            //        transferReason = ExtendedTransferManager.TransferReason.VehicleLargeMajorRepair;
+            //        transferReason = Mod.VehicleLargeMajorRepair;
             //    }
             //    else
             //    {
-            //        transferReason = ExtendedTransferManager.TransferReason.VehicleLargeMinorRepair;
+            //        transferReason = Mod.VehicleLargeMinorRepair;
             //    }
-            //    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(transferReason, offer);
+            //    Singleton<TransferManager>.instance.AddIncomingOffer(transferReason, offer);
             //}
         }
 
@@ -193,7 +195,8 @@ namespace RoadsideCare.HarmonyPatches
             bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
             if ((fuelPercent > 0.2 && fuelPercent < 0.8 && shouldFuel) || fuelPercent <= 0.2)
             {
-                ExtendedTransferManager.Offer offer = default;
+                TransferManager.TransferOffer offer = default;
+                offer.Priority = 7;
                 offer.Citizen = instance.GetOwnerID(vehicleID, ref data).Citizen;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
@@ -201,11 +204,11 @@ namespace RoadsideCare.HarmonyPatches
                 bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                 if (isElectric)
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuelElectric, offer);
+                    Singleton<TransferManager>.instance.AddIncomingOffer(Mod.VehicleFuelElectric, offer);
                 }
                 else
                 {
-                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleFuel, offer);
+                    Singleton<TransferManager>.instance.AddIncomingOffer(Mod.VehicleFuel, offer);
                 }
                 return;
             }
@@ -214,12 +217,13 @@ namespace RoadsideCare.HarmonyPatches
 
             if ((shouldWash && vehicleNeeds.DirtPercentage > 20) || vehicleNeeds.DirtPercentage >= 80)
             {
-                ExtendedTransferManager.Offer offer = default;
+                TransferManager.TransferOffer offer = default;
+                offer.Priority = 7;
                 offer.Citizen = instance.GetOwnerID(vehicleID, ref data).Citizen;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.VehicleWash, offer);
+                Singleton<TransferManager>.instance.AddIncomingOffer(Mod.VehicleWash, offer);
                 return;
             }
 
@@ -227,22 +231,23 @@ namespace RoadsideCare.HarmonyPatches
 
             //if (shouldReapir || vehicleNeeds.WearPercentage >= 90)
             //{
-            //    ExtendedTransferManager.Offer offer = default;
+            //    TransferManager.TransferOffer offer = default;
+            //    offer.Priority = 7;
             //    offer.Citizen = instance.GetOwnerID(vehicleID, ref data).Citizen;
             //    offer.Position = data.GetLastFramePosition();
             //    offer.Amount = 1;
             //    offer.Active = true;
-            //    ExtendedTransferManager.TransferReason transferReason;
+            //    TransferManager.TransferReason transferReason;
             //    bool isMajorRepair = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
             //    if (isMajorRepair)
             //    {
-            //        transferReason = ExtendedTransferManager.TransferReason.VehicleSmallMajorRepair;
+            //        transferReason = Mod.VehicleSmallMajorRepair;
             //    }
             //    else
             //    {
-            //        transferReason = ExtendedTransferManager.TransferReason.VehicleSmallMinorRepair;
+            //        transferReason = Mod.VehicleSmallMinorRepair;
             //    }
-            //    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(transferReason, offer);
+            //    Singleton<TransferManager>.instance.AddIncomingOffer(transferReason, offer);
             //}
         }
 

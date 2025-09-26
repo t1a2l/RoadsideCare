@@ -5,13 +5,12 @@ using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
 using ColossalFramework.Math;
-using MoreTransferReasons;
 using RoadsideCare.Managers;
 using UnityEngine;
 
 namespace RoadsideCare.AI
 {
-    public class VehicleWashBuildingAI : PlayerBuildingAI, IExtendedBuildingAI
+    public class VehicleWashBuildingAI : PlayerBuildingAI
     {
         [CustomizableProperty("Uneducated Workers", "Workers", 0)]
         public int m_workPlaceCount0 = 2;
@@ -22,7 +21,7 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Noise Radius", "Pollution")]
         public float m_noiseRadius = 50f;
 
-        readonly ExtendedTransferManager.TransferReason m_outgoingResource = ExtendedTransferManager.TransferReason.VehicleWash;
+        readonly TransferManager.TransferReason m_outgoingResource = Mod.VehicleWash;
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
         {
@@ -79,14 +78,14 @@ namespace RoadsideCare.AI
         public override string GetDebugString(ushort buildingID, ref Building data)
         {
             string text = base.GetDebugString(buildingID, ref data);
-            ExtendedTransferManager.TransferReason outgoingResource = m_outgoingResource;
-            if (outgoingResource != ExtendedTransferManager.TransferReason.None)
+            TransferManager.TransferReason outgoingResource = m_outgoingResource;
+            if (outgoingResource != TransferManager.TransferReason.None)
             {
                 int count = 0;
                 int cargo = 0;
                 int capacity = 0;
                 int outside = 0;
-                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource, ref count, ref cargo, ref capacity, ref outside);
+                CalculateGuestVehicles(buildingID, ref data, outgoingResource, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2}", text, outgoingResource.ToString(), cargo);
             }
             return text;
@@ -145,29 +144,13 @@ namespace RoadsideCare.AI
             }
         }
 
-        public void ExtendedStartTransfer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ExtendedTransferManager.Offer offer)
-        {
-
-        }
-
-        public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
-        {
-            amount = 0;
-            max = 0;
-        }
-
-        public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
-        {
-
-        }
-
         public override void BuildingDeactivated(ushort buildingID, ref Building data)
         {
-            ExtendedTransferManager.Offer offer = default;
+            TransferManager.TransferOffer offer = default;
             offer.Building = buildingID;
-            if (m_outgoingResource != ExtendedTransferManager.TransferReason.None)
+            if (m_outgoingResource != TransferManager.TransferReason.None)
             {
-                Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource, offer);
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource, offer);
             }
             base.BuildingDeactivated(buildingID, ref data);
         }
@@ -201,12 +184,12 @@ namespace RoadsideCare.AI
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
                 if (buildingData.m_fireIntensity == 0)
                 {
-                    ExtendedTransferManager.Offer offer = default;
+                    TransferManager.TransferOffer offer = default;
                     offer.Building = buildingID;
                     offer.Position = buildingData.m_position;
                     offer.Amount = 1;
                     offer.Active = false;
-                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(m_outgoingResource, offer);
+                    Singleton<TransferManager>.instance.AddOutgoingOffer(m_outgoingResource, offer);
                 }
                 RefreshVehicleWashPoints(buildingID);
                 RefreshVehicleWashLanes(buildingID);

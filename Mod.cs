@@ -18,6 +18,22 @@ namespace RoadsideCare
 
         string IUserMod.Description => "Track individual vehicles' needs and strategically place gas stations, car washes, and repair shops as roadside care for vehicles.";
 
+        public const TransferManager.TransferReason PetroleumProducts = (TransferManager.TransferReason)167;
+
+        public const TransferManager.TransferReason VehicleFuel = (TransferManager.TransferReason)209;
+
+        public const TransferManager.TransferReason VehicleFuelElectric = (TransferManager.TransferReason)210;
+
+        public const TransferManager.TransferReason VehicleWash = (TransferManager.TransferReason)211;
+
+        public const TransferManager.TransferReason VehicleMinorRepair = (TransferManager.TransferReason)212;
+
+        public const TransferManager.TransferReason VehicleMajorRepair = (TransferManager.TransferReason)213;
+
+        public const TransferManager.TransferReason VehicleOutOfFuel = (TransferManager.TransferReason)214;
+
+        public const TransferManager.TransferReason VehicleBrokenDown = (TransferManager.TransferReason)215;
+
         public static bool IsEnabled = false;
         public static LoadMode CurrentLoadMode;
         public static bool isGuiRunning = false;

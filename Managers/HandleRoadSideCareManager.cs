@@ -1,8 +1,6 @@
 ﻿using System;
 using ColossalFramework;
 using HarmonyLib;
-using MoreTransferReasons;
-using MoreTransferReasons.AI;
 using RoadsideCare.AI;
 using RoadsideCare.Utils;
 using UnityEngine;
@@ -98,7 +96,7 @@ namespace RoadsideCare.Managers
             {
                 fuelingInSeconds = RoadsideCareSettings.PassengerCarFuelingTimeInSeconds;
             }
-            if (data.Info.GetAI() is ExtendedCargoTruckAI)
+            if (data.Info.GetAI() is CargoTruckAI)
             {
                 fuelingInSeconds = RoadsideCareSettings.CargoTruckFuelingTimeInSeconds;
             }
@@ -127,7 +125,7 @@ namespace RoadsideCare.Managers
             {
                 handWashInSeconds = RoadsideCareSettings.PassengerCarHandWashTimeInSeconds;
             }
-            if (data.Info.GetAI() is ExtendedCargoTruckAI)
+            if (data.Info.GetAI() is CargoTruckAI)
             {
                 handWashInSeconds = RoadsideCareSettings.CargoTruckHandWashTimeInSeconds;
             }
@@ -345,16 +343,16 @@ namespace RoadsideCare.Managers
                 var humanAI = citizen.GetCitizenInfo(citizenId).GetAI() as HumanAI;
                 humanAI.StartMoving(citizenId, ref citizen, citizenInstance.m_targetBuilding, targetBuilding);
             }
-            else if (data.Info.GetAI() is ExtendedCargoTruckAI extendedCargoTruckAI)
+            else if (data.Info.GetAI() is CargoTruckAI cargoTruckAI)
             {
                 if((data.m_flags & Vehicle.Flags.GoingBack) != 0)
                 {
                     data.m_sourceBuilding = targetBuilding;
-                    extendedCargoTruckAI.SetTarget(vehicleID, ref data, 0);
+                    cargoTruckAI.SetTarget(vehicleID, ref data, 0);
                 }
                 else
                 {
-                    extendedCargoTruckAI.SetTarget(vehicleID, ref data, targetBuilding);
+                    cargoTruckAI.SetTarget(vehicleID, ref data, targetBuilding);
                 }     
             }
         }
@@ -362,18 +360,11 @@ namespace RoadsideCare.Managers
         private static void ModifyGasStationFuelAmount(ushort vehicleID, ref Vehicle data, ushort buildingID, ref Building building, int fuelAmount)
         {
             bool iElectricPassengerCar = data.Info.GetAI() is PassengerCarAI && data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-            bool iElectricCargoTruck = data.Info.GetAI() is ExtendedCargoTruckAI extendedCargoTruckAI && extendedCargoTruckAI.m_isElectric;
+            bool iElectricCargoTruck = data.Info.GetAI() is CargoTruckAI && data.Info.m_class.m_subService == (ItemClass.SubService)43;
 
             if (!iElectricPassengerCar && !iElectricCargoTruck)
             {
-                if (building.Info.GetAI() is GasPumpAI gasPumpAI)
-                {
-                    gasPumpAI.ExtendedModifyMaterialBuffer(buildingID, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref fuelAmount);
-                }
-                if (building.Info.GetAI() is GasStationAI gasStationAI)
-                {
-                    gasStationAI.ExtendedModifyMaterialBuffer(buildingID, ref building, ExtendedTransferManager.TransferReason.VehicleFuel, ref fuelAmount);
-                }
+                building.Info.m_buildingAI.ModifyMaterialBuffer(buildingID, ref building, Mod.VehicleFuel, ref fuelAmount);
             }
             Singleton<EconomyManager>.instance.AddResource(EconomyManager.Resource.PublicIncome, 20, ItemClass.Service.Vehicles, ItemClass.SubService.None, ItemClass.Level.Level2);
         }

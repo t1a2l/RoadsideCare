@@ -1,7 +1,5 @@
 ﻿using ColossalFramework;
 using HarmonyLib;
-using MoreTransferReasons;
-using MoreTransferReasons.AI;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
 
@@ -27,9 +25,9 @@ namespace RoadsideCare.HarmonyPatches
         }
 
 
-        [HarmonyPatch(typeof(ExtenedResidentAI), "ExtendedStartTransfer")]
+        [HarmonyPatch(typeof(ResidentAI), "StartTransfer")]
         [HarmonyPrefix]
-        public static bool ExtendedStartTransfer(ExtenedResidentAI __instance, uint citizenID, ref Citizen data, ExtendedTransferManager.TransferReason material, ExtendedTransferManager.Offer offer)
+        public static bool StartTransfer(ResidentAI __instance, uint citizenID, ref Citizen data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
             if (data.m_flags == Citizen.Flags.None || data.Dead || data.Sick)
             {
@@ -52,11 +50,11 @@ namespace RoadsideCare.HarmonyPatches
             }
             switch (material)
             {
-                case ExtendedTransferManager.TransferReason.VehicleFuel:
-                case ExtendedTransferManager.TransferReason.VehicleFuelElectric:
-                case ExtendedTransferManager.TransferReason.VehicleWash:
-                case ExtendedTransferManager.TransferReason.VehicleMinorRepair:
-                case ExtendedTransferManager.TransferReason.VehicleMajorRepair:
+                case Mod.VehicleFuel:
+                case Mod.VehicleFuelElectric:
+                case Mod.VehicleWash:
+                case Mod.VehicleMinorRepair:
+                case Mod.VehicleMajorRepair:
                     data.m_flags &= ~Citizen.Flags.Evacuating;
                     Singleton<VehicleManager>.instance.m_vehicles.m_buffer[data.m_vehicle].m_custom = (ushort)material;
                     __instance.StartMoving(citizenID, ref data, source_building, offer.Building);
