@@ -22,8 +22,8 @@ namespace RoadsideCare
         public static LoadMode CurrentLoadMode;
         public static bool isGuiRunning = false;
         public static GasStationSegmentSelectButton GSButton;
-        public static VehicleWashBuildingLaneSegmentSelectButton VWPButton;
-        public static VehicleWashBuildingPointSegmentSelectButton VWLButton;
+        public static VehicleWashBuildingPointSegmentSelectButton VWPButton;
+        public static VehicleWashBuildingLaneSegmentSelectButton VWLButton;
         public static string m_atlasName = "RoadsideCareAtlas.png";
         public static bool m_atlasLoaded;
         private const float LeftMargin = 24f;
@@ -92,6 +92,8 @@ namespace RoadsideCare
             {
                 SetupGui();
             }
+
+            ToolsModifierControl.toolController.gameObject.AddComponent<SegmentSelectionTool>();
 
             var buildings = Singleton<BuildingManager>.instance.m_buildings;
 
@@ -237,26 +239,26 @@ namespace RoadsideCare
             }
             if (VWLButton == null)
             {
-                VWLButton = (playerbuildingInfo.AddUIComponent(typeof(VehicleWashBuildingPointSegmentSelectButton)) as VehicleWashBuildingPointSegmentSelectButton);
+                VWLButton = (playerbuildingInfo.AddUIComponent(typeof(VehicleWashBuildingLaneSegmentSelectButton)) as VehicleWashBuildingLaneSegmentSelectButton);
             }
             if (VWPButton == null)
             {
-                VWPButton = (playerbuildingInfo.AddUIComponent(typeof(VehicleWashBuildingLaneSegmentSelectButton)) as VehicleWashBuildingLaneSegmentSelectButton);
+                VWPButton = (playerbuildingInfo.AddUIComponent(typeof(VehicleWashBuildingPointSegmentSelectButton)) as VehicleWashBuildingPointSegmentSelectButton);
             }
 
             GSButton.width = 30f;
             GSButton.height = 40f;
-            GSButton.relativePosition = new Vector3(playerbuildingInfo.size.x - GSButton.width - 90, playerbuildingInfo.size.y - GSButton.height);
+            GSButton.relativePosition = new Vector3(420f, 140f);
             GSButton.Hide();
 
             VWLButton.width = 30f;
             VWLButton.height = 40f;
-            VWLButton.relativePosition = new Vector3(playerbuildingInfo.size.x - GSButton.width - VWLButton.width - 90, playerbuildingInfo.size.y - GSButton.height - VWLButton.height);
+            VWLButton.relativePosition = new Vector3(420f, 140f);
             VWLButton.Hide();
 
             VWPButton.width = 30f;
             VWPButton.height = 40f;
-            VWPButton.relativePosition = new Vector3(playerbuildingInfo.size.x - GSButton.width - VWLButton.width - VWPButton.width - 90, playerbuildingInfo.size.y - GSButton.height - VWLButton.height - VWPButton.width);
+            VWPButton.relativePosition = new Vector3(420f, 180f);
             VWPButton.Hide();
         }
 

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using ColossalFramework;
 using ColossalFramework.UI;
 using HarmonyLib;
-using RoadsideCare.AI;
 using RoadsideCare.Managers;
+using RoadsideCare.UI;
 using UnityEngine;
 
 namespace RoadsideCare.HarmonyPatches
@@ -146,6 +146,25 @@ namespace RoadsideCare.HarmonyPatches
         public static void OnSetTarget(CityServiceWorldInfoPanel __instance, ref InstanceID ___m_InstanceID)
         {
             ushort buildingId = ___m_InstanceID.Building;
+            if (buildingSelected && buildingPosition != Vector3.zero)
+            {
+                if (buildingSegmentList.Count > 0)
+                {
+                    FindSegmentsAroundBuilding(buildingPosition, buildingSegmentList, buildingTypeArr, buildingColorArr, 40f, false);
+                    buildingSegmentList = [];
+                    buildingTypeArr = null;
+                    buildingColorArr = null;
+                }
+                if (buildingSegmentList2.Count > 0)
+                {
+                    FindSegmentsAroundBuilding(buildingPosition, buildingSegmentList2, buildingTypeArr2, buildingColorArr2, 40f, false);
+                    buildingSegmentList2 = [];
+                    buildingTypeArr2 = null;
+                    buildingColorArr2 = null;
+                }
+                buildingSelected = false;
+                buildingPosition = Vector3.zero;
+            }
             if (GasStationManager.GasStationBuildingExist(buildingId))
             {
                 var gasStation = GasStationManager.GetGasStationBuilding(buildingId);
@@ -158,54 +177,80 @@ namespace RoadsideCare.HarmonyPatches
                 buildingSegmentList = gasStation.FuelPoints;
                 buildingTypeArr = typeArr;
                 buildingColorArr = colorArr;
+                Mod.GSButton?.Show();
+                Mod.VWLButton?.Hide();
+                Mod.VWPButton?.Hide();
+                SegmentSelectionTool.Instance.CurrentBuilding = buildingId;
             }
             else if (VehicleWashBuildingManager.VehicleWashBuildingExist(buildingId))
             {
                 var vehicleWash = VehicleWashBuildingManager.GetVehicleWashBuilding(buildingId);
                 var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
-                var typeArr = new string[] { "VehicleWashPointAI", "VehicleWashPointLargeAI", "VehicleWashPointSmallAI" };
-                var typeArr2 = new string[] { "VehicleWashLaneAI", "VehicleWashLaneLargeAI", "VehicleWashLaneSmallAI" };
-                var colorArr = new Color[] { Color.white, Color.yellow };
-                var colorArr2 = new Color[] { Color.magenta, Color.green };
-                FindSegmentsAroundBuilding(building.m_position, vehicleWash.VehicleWashPoints, typeArr, colorArr, 40f, true);
-                FindSegmentsAroundBuilding(building.m_position, vehicleWash.VehicleWashLanes, typeArr2, colorArr2, 40f, true);
                 buildingSelected = true;
                 buildingPosition = building.m_position;
-                buildingSegmentList = vehicleWash.VehicleWashPoints;
-                buildingSegmentList2 = vehicleWash.VehicleWashLanes;
-                buildingTypeArr = typeArr;
-                buildingTypeArr2 = typeArr2;
-                buildingColorArr = colorArr;
-                buildingColorArr2 = colorArr2;
+                SegmentSelectionTool.Instance.CurrentBuilding = buildingId;
+                Mod.GSButton?.Hide();
+                Mod.VWLButton?.Show();
+                Mod.VWPButton?.Show();
+                if (vehicleWash.VehicleWashPoints.Count > 0)
+                {
+                    var typeArr = new string[] { "VehicleWashPointAI", "VehicleWashPointLargeAI", "VehicleWashPointSmallAI" };
+                    var colorArr = new Color[] { Color.white, Color.yellow };
+                    FindSegmentsAroundBuilding(building.m_position, vehicleWash.VehicleWashPoints, typeArr, colorArr, 40f, true);
+                    buildingSegmentList = vehicleWash.VehicleWashPoints;
+                    buildingTypeArr = typeArr;
+                    buildingColorArr = colorArr;
+                    Mod.VWLButton?.Show();
+                }
+                if (vehicleWash.VehicleWashLanes.Count > 0)
+                {
+                    var typeArr2 = new string[] { "VehicleWashLaneAI", "VehicleWashLaneLargeAI", "VehicleWashLaneSmallAI" };
+                    var colorArr2 = new Color[] { Color.magenta, Color.green };
+                    FindSegmentsAroundBuilding(building.m_position, vehicleWash.VehicleWashLanes, typeArr2, colorArr2, 40f, true);
+                    buildingSegmentList2 = vehicleWash.VehicleWashLanes;
+                    buildingTypeArr2 = typeArr2;
+                    buildingColorArr2 = colorArr2;
+                    Mod.VWPButton?.Show();
+                }
             }
             else
             {
-                if (buildingSelected && buildingPosition != Vector3.zero)
+                Mod.GSButton?.Hide();
+                Mod.VWLButton?.Hide();
+                Mod.VWPButton?.Hide();
+            }
+        }
+
+
+        [HarmonyPatch(typeof(WorldInfoPanel), "HideAllWorldInfoPanels")]
+        [HarmonyPostfix]
+        public static void HideAllWorldInfoPanels()
+        {
+            if (buildingSelected && buildingPosition != Vector3.zero)
+            {
+                if (buildingSegmentList.Count > 0)
                 {
-                    if (buildingSegmentList.Count > 0)
-                    {
-                        FindSegmentsAroundBuilding(buildingPosition, buildingSegmentList, buildingTypeArr, buildingColorArr, 40f, false);
-                        buildingSegmentList = [];
-                    }
-                    if (buildingSegmentList2.Count > 0)
-                    {
-                        FindSegmentsAroundBuilding(buildingPosition, buildingSegmentList2, buildingTypeArr2, buildingColorArr2, 40f, false);
-                        buildingSegmentList = [];
-                    }
-                    buildingSelected = false;
-                    buildingPosition = Vector3.zero;
+                    FindSegmentsAroundBuilding(buildingPosition, buildingSegmentList, buildingTypeArr, buildingColorArr, 40f, false);
+                    buildingSegmentList = [];
                     buildingTypeArr = null;
-                    buildingTypeArr2 = null;
                     buildingColorArr = null;
+                }
+                if (buildingSegmentList2.Count > 0)
+                {
+                    FindSegmentsAroundBuilding(buildingPosition, buildingSegmentList2, buildingTypeArr2, buildingColorArr2, 40f, false);
+                    buildingSegmentList2 = [];
+                    buildingTypeArr2 = null;
                     buildingColorArr2 = null;
                 }
+                buildingSelected = false;
+                buildingPosition = Vector3.zero;
             }
         }
 
         private const int MaxBuildingGridIndex = BuildingManager.BUILDINGGRID_RESOLUTION - 1;
         private const int BuildingGridMiddle = BuildingManager.BUILDINGGRID_RESOLUTION / 2;
 
-        public static void FindSegmentsAroundBuilding(Vector3 position, List<ushort> list, string[] typeArr, Color[] colorArr, float maxDistance, bool highlight)
+        private static void FindSegmentsAroundBuilding(Vector3 position, List<ushort> list, string[] typeArr, Color[] colorArr, float maxDistance, bool highlight)
         {
             if (position == Vector3.zero)
             {
@@ -234,7 +279,7 @@ namespace RoadsideCare.HarmonyPatches
                     while (segmentId != 0)
                     {
                         ref var segment = ref NetManager.instance.m_segments.m_buffer[segmentId];
-                        if (segment.Info.GetType().Name.Equals(typeNormal) || segment.Info.GetType().Name.Equals(typeLarge) || segment.Info.GetType().Name.Equals(typeSmall))
+                        if (segment.Info.m_netAI.GetType().Name.Equals(typeNormal) || segment.Info.m_netAI.GetType().Name.Equals(typeLarge) || segment.Info.m_netAI.GetType().Name.Equals(typeSmall))
                         {
                             if(highlight)
                             {

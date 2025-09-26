@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using ColossalFramework;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using UnityEngine;
@@ -16,6 +17,16 @@ namespace RoadsideCare.Utils
         public static string FILE_PATH = ModPath;
         public static bool EmbededResources = true;
 
+        public static CursorInfo LoadCursor(string cursorName)
+        {
+            CursorInfo cursor = ScriptableObject.CreateInstance<CursorInfo>();
+
+            cursor.m_texture = GetTextureFromAssemblyManifest(cursorName);
+            cursor.m_hotspot = new Vector2(5f, 0f);
+
+            return cursor;
+        }
+
         public static UITextureAtlas GetAtlas(string atlasName)
         {
             UITextureAtlas returnAtlas = null;
@@ -28,7 +39,7 @@ namespace RoadsideCare.Utils
             return returnAtlas;
         }
 
-        static PluginManager man => PluginManager.instance;
+        static PluginManager Man => PluginManager.instance;
 
         public static void FixTransparency(Texture2D texture)
         {
@@ -171,7 +182,7 @@ namespace RoadsideCare.Utils
         public static PluginManager.PluginInfo GetPlugin(Assembly assembly = null)
         {
             assembly ??= Assembly.GetExecutingAssembly();
-            foreach (PluginManager.PluginInfo current in man.GetPluginsInfo())
+            foreach (PluginManager.PluginInfo current in Man.GetPluginsInfo())
             {
                 if (current.ContainsAssembly(assembly))
                     return current;

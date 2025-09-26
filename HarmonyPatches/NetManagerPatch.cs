@@ -9,14 +9,14 @@ namespace RoadsideCare.HarmonyPatches
     [HarmonyPatch]
     public static class NetManagerPatch
     {
-        [HarmonyPatch(typeof(NetManager), "CreateSegment",
-           [typeof(ushort), typeof(Randomizer), typeof(NetInfo), typeof(TreeInfo), typeof(ushort), typeof(ushort), typeof(Vector3), typeof(Vector3), typeof(uint), typeof(uint), typeof(bool)],
-           [ArgumentType.Out, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
-        [HarmonyPostfix]
-        public static void CreateSegment(ref ushort segment, ref Randomizer randomizer, NetInfo info, TreeInfo treeInfo, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, uint buildIndex, uint modifiedIndex, bool invert)
-        {
-            CreateOrUpdateSegmentToARoadCareBuilding(segment);
-        }
+        //[HarmonyPatch(typeof(NetManager), "CreateSegment",
+        //   [typeof(ushort), typeof(Randomizer), typeof(NetInfo), typeof(TreeInfo), typeof(ushort), typeof(ushort), typeof(Vector3), typeof(Vector3), typeof(uint), typeof(uint), typeof(bool)],
+        //   [ArgumentType.Out, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
+        //[HarmonyPostfix]
+        //public static void CreateSegment(ref ushort segment, ref Randomizer randomizer, NetInfo info, TreeInfo treeInfo, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, uint buildIndex, uint modifiedIndex, bool invert)
+        //{
+        //    CreateOrUpdateSegmentToARoadCareBuilding(segment);
+        //}
 
         [HarmonyPatch(typeof(NetManager), "UpdateSegment",
            [typeof(ushort), typeof(ushort), typeof(int)],
@@ -72,7 +72,7 @@ namespace RoadsideCare.HarmonyPatches
                             vehicleWashBuilding.VehicleWashLanes.Add(segmentID);
                             VehicleWashBuildingManager.SetVehicleWashLanes(buildingID, vehicleWashBuilding.VehicleWashLanes);
                             break;
-                        }  
+                        }
                     }
                 }
                 return;
@@ -92,7 +92,7 @@ namespace RoadsideCare.HarmonyPatches
                             vehicleWashBuilding.VehicleWashPoints.Add(segmentID);
                             VehicleWashBuildingManager.SetVehicleWashPoints(buildingID, vehicleWashBuilding.VehicleWashPoints);
                             break;
-                        }  
+                        }
                     }
                 }
                 return;
