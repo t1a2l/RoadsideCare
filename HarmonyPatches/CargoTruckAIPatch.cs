@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using HarmonyLib;
+using MoreTransferReasons;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
 using UnityEngine;
@@ -84,7 +85,7 @@ namespace RoadsideCare.HarmonyPatches
 
             var buildingAI = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI();
 
-            if ((buildingAI is GasStationAI || buildingAI is GasPumpAI) && (data.m_transferType == (byte)Mod.VehicleFuel || data.m_transferType == (byte)Mod.VehicleFuelElectric))
+            if ((buildingAI is GasStationAI || buildingAI is GasPumpAI) && (data.m_transferType == (byte)ExtendedTransferManager.VehicleFuel || data.m_transferType == (byte)ExtendedTransferManager.VehicleFuelElectric))
             {
                 return true;
             }
@@ -181,9 +182,9 @@ namespace RoadsideCare.HarmonyPatches
         {
             if (VehicleNeedsManager.VehicleNeedsExist(vehicleID))
             {
-                if(material == Mod.VehicleFuel || material == Mod.VehicleFuelElectric ||
-                    material == Mod.VehicleWash || material == Mod.VehicleMinorRepair || 
-                    material == Mod.VehicleMajorRepair)
+                if(material == ExtendedTransferManager.VehicleFuel || material == ExtendedTransferManager.VehicleFuelElectric ||
+                    material == ExtendedTransferManager.VehicleWash || material == ExtendedTransferManager.VehicleMinorRepair || 
+                    material == ExtendedTransferManager.VehicleMajorRepair)
                 {
                     data.m_custom = (ushort)material;
                     __instance.SetTarget(vehicleID, ref data, offer.Building);

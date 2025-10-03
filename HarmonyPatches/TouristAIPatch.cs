@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using HarmonyLib;
+using MoreTransferReasons;
 using RoadsideCare.AI;
 using RoadsideCare.Managers;
 
@@ -51,11 +52,11 @@ namespace RoadsideCare.HarmonyPatches
             }
             switch (material)
             {
-                case Mod.VehicleFuel:
-                case Mod.VehicleFuelElectric:
-                case Mod.VehicleWash:
-                case Mod.VehicleMinorRepair:
-                case Mod.VehicleMajorRepair:
+                case ExtendedTransferManager.VehicleFuel:
+                case ExtendedTransferManager.VehicleFuelElectric:
+                case ExtendedTransferManager.VehicleWash:
+                case ExtendedTransferManager.VehicleMinorRepair:
+                case ExtendedTransferManager.VehicleMajorRepair:
                     data.m_flags &= ~Citizen.Flags.Evacuating;
                     Singleton<VehicleManager>.instance.m_vehicles.m_buffer[data.m_vehicle].m_custom = (ushort)material;
                     __instance.StartMoving(citizenID, ref data, source_building, offer.Building);

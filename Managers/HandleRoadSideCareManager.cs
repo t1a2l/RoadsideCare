@@ -1,6 +1,7 @@
 ﻿using System;
 using ColossalFramework;
 using HarmonyLib;
+using MoreTransferReasons;
 using RoadsideCare.AI;
 using RoadsideCare.Utils;
 using UnityEngine;
@@ -364,7 +365,7 @@ namespace RoadsideCare.Managers
 
             if (!iElectricPassengerCar && !iElectricCargoTruck)
             {
-                building.Info.m_buildingAI.ModifyMaterialBuffer(buildingID, ref building, Mod.VehicleFuel, ref fuelAmount);
+                building.Info.m_buildingAI.ModifyMaterialBuffer(buildingID, ref building, ExtendedTransferManager.VehicleFuel, ref fuelAmount);
             }
             Singleton<EconomyManager>.instance.AddResource(EconomyManager.Resource.PublicIncome, 20, ItemClass.Service.Vehicles, ItemClass.SubService.None, ItemClass.Level.Level2);
         }

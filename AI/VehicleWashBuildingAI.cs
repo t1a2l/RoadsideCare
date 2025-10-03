@@ -5,6 +5,7 @@ using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
 using ColossalFramework.Math;
+using MoreTransferReasons;
 using RoadsideCare.Managers;
 using UnityEngine;
 
@@ -21,7 +22,7 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Noise Radius", "Pollution")]
         public float m_noiseRadius = 50f;
 
-        readonly TransferManager.TransferReason m_outgoingResource = Mod.VehicleWash;
+        readonly TransferManager.TransferReason m_outgoingResource = ExtendedTransferManager.VehicleWash;
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
         {
