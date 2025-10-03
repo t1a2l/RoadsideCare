@@ -3,6 +3,7 @@ using System.Text;
 using ColossalFramework;
 using ColossalFramework.DataBinding;
 using ColossalFramework.Math;
+using MoreTransferReasons;
 using UnityEngine;
 
 namespace RoadsideCare.AI
@@ -21,11 +22,11 @@ namespace RoadsideCare.AI
         [CustomizableProperty("Noise Radius", "Pollution")]
         public float m_noiseRadius = 50f;
 
-        readonly TransferManager.TransferReason m_incomingResource = Mod.PetroleumProducts;
+        readonly TransferManager.TransferReason m_incomingResource = ExtendedTransferManager.PetroleumProducts;
 
-        readonly TransferManager.TransferReason m_outgoingResource1 = Mod.VehicleMinorRepair;
+        readonly TransferManager.TransferReason m_outgoingResource1 = ExtendedTransferManager.VehicleMinorRepair;
 
-        readonly TransferManager.TransferReason m_outgoingResource2 = Mod.VehicleMajorRepair;
+        readonly TransferManager.TransferReason m_outgoingResource2 = ExtendedTransferManager.VehicleMajorRepair;
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
         {
@@ -80,7 +81,7 @@ namespace RoadsideCare.AI
 
         public override void GetPlacementInfoMode(out InfoManager.InfoMode mode, out InfoManager.SubInfoMode subMode, float elevation)
         {
-            if (m_incomingResource == Mod.PetroleumProducts)
+            if (m_incomingResource == ExtendedTransferManager.PetroleumProducts)
             {
                 mode = InfoManager.InfoMode.Connections;
                 subMode = InfoManager.SubInfoMode.None;
